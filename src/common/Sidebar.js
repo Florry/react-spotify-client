@@ -17,7 +17,7 @@ class Sidebar extends React.Component {
 	authStore = this.props.authStore;
 
 	async componentDidMount() {
-		// this.playlistStore.loadPlaylistsForLoggedInUser();
+		this.playlistStore.loadPlaylistsForLoggedInUser();
 	}
 
 	render() {
@@ -45,9 +45,6 @@ class Sidebar extends React.Component {
 						playlists.map((playlist, i) => <Link key={i.toString() + playlist.uri} to={PLAYLIST.replace(":playlistId", playlist.uri)}>
 							<li>{playlist.name}</li>
 						</Link>)
-					}
-					{
-						tracks.map((track, i) => <li key={i.toString() + track.track.uri}>{track.track.name}</li>)
 					}
 
 				</ul>

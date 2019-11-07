@@ -21,13 +21,13 @@ export default class AlbumTrackRow extends React.Component {
 	}
 
 	render() {
-		const { metadata, songs, offset } = this.props;
+		const { songs, offset } = this.props;
 
-		metadata.sort((a, b) => {
-			const aDisc = a ? a.disc : 100;
-			const bDisc = b ? b.disc : 100;
-			const aNumber = a ? a.number : 100;
-			const bNumber = b ? b.number : 100;
+		songs.sort((a, b) => {
+			const aDisc = a ? a.disc_number : 100;
+			const bDisc = b ? b.disc_number : 100;
+			const aNumber = a ? a.track_number : 100;
+			const bNumber = b ? b.track_number : 100;
 
 			if (aDisc > bDisc)
 				return 1;
@@ -41,16 +41,16 @@ export default class AlbumTrackRow extends React.Component {
 				return 0;
 		});
 
-		const additionalRows = this.getNumberOfRows(metadata) - (metadata.length - 1);
+		const additionalRows = this.getNumberOfRows(songs) - (songs.length - 1);
 
 		for (let i = 0; i < additionalRows; i++)
-			metadata.push(null);
+			songs.push(null);
 
 		return (
-			metadata.map((data, i) => {
+			songs.map((song, i) => {
 				// TODO: offset all tr with position absolute
 
-				if (data === null)
+				if (song === null)
 					return <tr
 						className="empty-row"
 						key={songs[i] ? songs[i].toString() : i.toString() + i.toString()}
@@ -65,7 +65,20 @@ export default class AlbumTrackRow extends React.Component {
 						<td />
 					</tr>;
 
-				const { name, artists, album, playable, duration, number, artistsString } = data;
+				const { added_at: added } = song;
+				const { name, artists, album, playable = true, duration_ms: duration, track_number: number } = song.track;
+
+				let biggestDimensions = 0;
+				let albumCover;
+
+				album.images.forEach(img => {
+					if (img.width > biggestDimensions) {
+						biggestDimensions = img.width;
+						albumCover = img.url;
+					}
+				});
+
+				const artistsString = artists.map(artist => artist.name).join(",")
 				const isStarred = !!songs[i] && starredSongs.starred.includes(songs[i]); // TODO: songs[i] is not sorted? 🤔
 
 				return (
@@ -78,8 +91,11 @@ export default class AlbumTrackRow extends React.Component {
 							className="album-td"
 						>
 							<div
+								style={{
+									backgroundImage: `url(${albumCover}?url=https://github.com/Florry)`
+								}}
 								className={i === 0
-									? (metadata.length === 1
+									? (songs.length === 1
 										? "album-art single-song"
 										: "album-art")
 									: ""} />
@@ -118,7 +134,7 @@ export default class AlbumTrackRow extends React.Component {
 						<td
 							className="td-date"
 						>
-							2019-11-05
+							{added.substring(0, 10)}
 						</td>
 					</tr>
 				);
@@ -129,57 +145,100 @@ export default class AlbumTrackRow extends React.Component {
 
 }
 
-
-// {
-	// 	"artists": [
-	// 		{
-	// 			"image": "spotify:image:8b5d3e6841fb39a4520b4bbe4b92eb8e05cfb273",
-	// 			"images": [
-	// 				[
-	// 					64,
-	// 					"spotify:image:c1a6abacb97b62f6126e19b8e444a4bb9ed47719"
-	// 				],
-	// 				[
-	// 					300,
-	// 					"spotify:image:8b5d3e6841fb39a4520b4bbe4b92eb8e05cfb273"
-	// 				],
-	// 				[
-	// 					600,
-	// 					"spotify:image:35b508aa8b95e23b531303051a57da20b8480fc1"
-	// 				]
-	// 			],
-	// 			"name": "Black Bonzo",
-	// 			"uri": "spotify:artist:62XNOSp5whyD7SbFtXvYnb"
-	// 		}
-	// 	],
-	// 	"image": "spotify:image:ab67616d00001e02aa4819e836d1e19c453492de",
-	// 	"images": [
-	// 		[
-	// 			64,
-	// 			"spotify:image:ab67616d00004851aa4819e836d1e19c453492de"
-	// 		],
-	// 		[
-	// 			300,
-	// 			"spotify:image:ab67616d00001e02aa4819e836d1e19c453492de"
-	// 		],
-	// 		[
-	// 			600,
-	// 			"spotify:image:ab67616d0000b273aa4819e836d1e19c453492de"
-	// 		]
-	// 	],
-	// 	"linkedTrack": "spotify:track:0iymXXnXVqoLJEp2hUeRE5",
-	// 	"disc": 1,
-	// 	"duration": 424000,
-	// 	"name": "Lady Of The Light",
-	// 	"number": 1,
-	// 	"playable": true,
-	// 	"explicit": false,
-	// 	"availability": "available",
-	// 	"album": {
-	// 		"uri": "spotify:album:0GI3PrOuJy1Q6MNuoHVGx7",
-	// 		"name": "Lady of the Light"
-	// 	},
-	// 	"local": false,
-	// 	"advertisement": false,
-	// 	"placeholder": false
-	// }
+const o = {
+	"added_at": "2019-10-30T17:20:20Z",
+	"added_by": {
+		"external_urls": {
+			"spotify": "https://open.spotify.com/user/counterwille"
+		},
+		"href": "https://api.spotify.com/v1/users/counterwille",
+		"id": "counterwille",
+		"type": "user",
+		"uri": "spotify:user:counterwille"
+	},
+	"is_local": false,
+	"primary_color": null,
+	"track": {
+		"album": {
+			"album_type": "album",
+			"artists": [
+				{
+					"external_urls": {
+						"spotify": "https://open.spotify.com/artist/0L8ExT028jH3ddEcZwqJJ5"
+					},
+					"href": "https://api.spotify.com/v1/artists/0L8ExT028jH3ddEcZwqJJ5",
+					"id": "0L8ExT028jH3ddEcZwqJJ5",
+					"name": "Red Hot Chili Peppers",
+					"type": "artist",
+					"uri": "spotify:artist:0L8ExT028jH3ddEcZwqJJ5"
+				}
+			],
+			"available_markets": [
+			],
+			"external_urls": {
+				"spotify": "https://open.spotify.com/album/7xl50xr9NDkd3i2kBbzsNZ"
+			},
+			"href": "https://api.spotify.com/v1/albums/7xl50xr9NDkd3i2kBbzsNZ",
+			"id": "7xl50xr9NDkd3i2kBbzsNZ",
+			"images": [
+				{
+					"height": 640,
+					"url": "https://i.scdn.co/image/ab67616d0000b27309fd83d32aee93dceba78517",
+					"width": 640
+				},
+				{
+					"height": 300,
+					"url": "https://i.scdn.co/image/ab67616d00001e0209fd83d32aee93dceba78517",
+					"width": 300
+				},
+				{
+					"height": 64,
+					"url": "https://i.scdn.co/image/ab67616d0000485109fd83d32aee93dceba78517",
+					"width": 64
+				}
+			],
+			"name": "Stadium Arcadium",
+			"release_date": "2006-05-09",
+			"release_date_precision": "day",
+			"total_tracks": 29,
+			"type": "album",
+			"uri": "spotify:album:7xl50xr9NDkd3i2kBbzsNZ"
+		},
+		"artists": [
+			{
+				"external_urls": {
+					"spotify": "https://open.spotify.com/artist/0L8ExT028jH3ddEcZwqJJ5"
+				},
+				"href": "https://api.spotify.com/v1/artists/0L8ExT028jH3ddEcZwqJJ5",
+				"id": "0L8ExT028jH3ddEcZwqJJ5",
+				"name": "Red Hot Chili Peppers",
+				"type": "artist",
+				"uri": "spotify:artist:0L8ExT028jH3ddEcZwqJJ5"
+			}
+		],
+		"available_markets": [],
+		"disc_number": 1,
+		"duration_ms": 309800,
+		"episode": false,
+		"explicit": false,
+		"external_ids": {
+			"isrc": "USWB10601602"
+		},
+		"external_urls": {
+			"spotify": "https://open.spotify.com/track/3L2Nyi3T7XabH8EEZFLDdX"
+		},
+		"href": "https://api.spotify.com/v1/tracks/3L2Nyi3T7XabH8EEZFLDdX",
+		"id": "3L2Nyi3T7XabH8EEZFLDdX",
+		"is_local": false,
+		"name": "Wet Sand",
+		"popularity": 64,
+		"preview_url": "https://p.scdn.co/mp3-preview/fc943bd27a6525c0cd6afc53c86e3978a1a23ade?cid=e3ab4c22331045f0b7f6e57235b58b47",
+		"track": true,
+		"track_number": 13,
+		"type": "track",
+		"uri": "spotify:track:3L2Nyi3T7XabH8EEZFLDdX"
+	},
+	"video_thumbnail": {
+		"url": null
+	}
+};

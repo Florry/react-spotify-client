@@ -32,7 +32,7 @@ class GetAuthToken extends React.Component {
 
 	render() {
 		if (this.state.shouldRedirect)
-			return <Redirect to={PLAYLIST} />;
+			return <Redirect to={PLAYLIST.replace(":playlistId", "spotify:playlist:7Go8gbNkcBt8vSSYTMLHwl")} />;
 		else
 			return (
 				<div>

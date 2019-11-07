@@ -62,16 +62,16 @@ class HttpClient {
 		try {
 			const response = await fetch(this.apiRoot + path, options);
 
-			if (response.status === 401) {
-				// localStorage.removeItem("accessToken");
-				// window.location.href = "./";
-			}
-
 			let responseBody = {};
 
 			try {
 				responseBody = await response.json();
 			} catch (err) { }
+
+			if (response.status === 401 && responseBody && responseBody.error && responseBody.error.message === "The access token expired") {
+				localStorage.removeItem("accessToken");
+				window.location.href = "";
+			}
 
 			if (response.status >= 400)
 				throw responseBody;

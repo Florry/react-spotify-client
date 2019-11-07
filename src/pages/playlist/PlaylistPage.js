@@ -32,7 +32,7 @@ const SORT_TYPES = {
 
 /** @typedef {import("../../stores/PlaylistStore").default} PlaylistStore */
 
-// @observer
+@observer
 @inject("playlistStore")
 class PlaylistPage extends React.Component {
 
@@ -44,15 +44,15 @@ class PlaylistPage extends React.Component {
 		sortOrder: 1,
 		metadata: metadata.metadata,
 		originalSortOrderMetadata: [...metadata.metadata],
-		scrollTop: window.scrollY
+		scrollTop: window.scrollY,
+		playlistId: this.props.match.params.playlistId
 	};
 
 	currentNumberOfRows = -1;
 
-	async componentDidMount() {
-		// const playlist = await this.playlistStore.getPlaylist(this.props.match.params.playlistId);
-		console.log(playlist.name);
-		this.playlistStore.loadTracksInPlaylist(this.props.match.params.playlistId);
+	componentDidMount() {
+		this.playlistStore.loadTracksInPlaylist(this.state.playlistId).then(() => this.forceUpdate());
+
 		window.addEventListener("scroll", () => this.handleScroll());
 	}
 
@@ -78,9 +78,9 @@ class PlaylistPage extends React.Component {
 				const sortedMetadata = metadata;
 
 				sortedMetadata.sort((a, b) => {
-					if (a.name > b.name)
+					if (a.track.name > b.track.name)
 						return 1 * this.state.sortOrder;
-					else if (a.name < b.name)
+					else if (a.track.name < b.track.name)
 						return -1 * this.state.sortOrder;
 					else
 						return 0;
@@ -166,22 +166,17 @@ class PlaylistPage extends React.Component {
 	}
 
 	render() {
-		const { songs } = playlist;
 		const { metadata, scrollTop } = this.state;
 
-		songs.length = 300;
-
 		let songsInCurrentAlbumRow = [];
-		let songIndexesInCurrentAlbumRow = [];
-
 		let offset = 0;
 
-		const tracks = this.playlistStore.tracks;
+		const tracks = this.playlistStore.getTracksInPlaylist(this.state.playlistId);
 
 		return (
 			<div
 				style={{
-					left: 400,
+					left: 450,
 					width: 1582,
 					position: "relative"
 				}}
@@ -200,42 +195,37 @@ class PlaylistPage extends React.Component {
 						</tr>
 					</thead>
 					<tbody>
-						<tr><td style={{ color: "#fff" }}>{tracks.length}</td></tr>
-						{tracks.map((track, i) => <tr key={i.toString() + track.uri}><td>{track.track.name}</td></tr>)}
 						{
-							songs.map((song, i) => {
-								if ((metadata[i - 1] && metadata[i - 1].album.uri === metadata[i].album.uri)
-									|| (!songsInCurrentAlbumRow.length && (metadata[i + 1] && metadata[i + 1].album.uri === metadata[i].album.uri))) {
-									songsInCurrentAlbumRow.push(song);
-									songIndexesInCurrentAlbumRow.push(i);
+							!!tracks && tracks.map((track, i) => {
+								if (
+									(!!tracks[i - 1] && tracks[i - 1].track.album.uri === tracks[i].track.album.uri)
+									||
+									(!songsInCurrentAlbumRow.length && (!!tracks[i + 1] && tracks[i + 1].track.album.uri === tracks[i].track.album.uri))
+
+								) {
+									songsInCurrentAlbumRow.push(track);
 								} else if (songsInCurrentAlbumRow.length) {
 									const songsInAlbum = [...songsInCurrentAlbumRow];
-									const songIndexesInAlbum = [...songIndexesInCurrentAlbumRow];
-									const currentMetadata = metadata.filter((data, i) => songIndexesInAlbum.includes(i));
 									const offsetToUse = offset;
 
-									songIndexesInCurrentAlbumRow.length = 0;
 									songsInCurrentAlbumRow.length = 0;
 
 									return (
 										<AlbumTrackRow
 											offset={offsetToUse}
-											key={song + i + "playlist"}
+											key={track + i + "playlist"}
 											songs={songsInAlbum}
-											metadata={currentMetadata}
 										/>
 									);
 								}
 								else {
-									const currentMetadata = [metadata[i]];
 									const offsetToUse = offset;
 
 									return (
 										<AlbumTrackRow
 											offset={offsetToUse}
-											key={song + i}
-											songs={[song]}
-											metadata={currentMetadata}
+											key={track + i}
+											songs={[track]}
 										/>
 									);
 								}
