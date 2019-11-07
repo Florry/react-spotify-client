@@ -1,0 +1,13 @@
+{
+	"compilerOptions": {
+		"experimentalDecorators": true,
+		"checkJs": true,
+		"jsx": "react",
+		"target": "esnext"
+	},
+	"include": [
+		"node_modules/mobx/lib",
+		"node_modules/mobx-react/lib"
+	],
+	"javascript.implicitProjectConfig.experimentalDecorators": true
+}

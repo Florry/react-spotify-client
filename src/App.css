@@ -1,0 +1,143 @@
+/** TODO: TEMP */
+
+body {
+	font-size: 12.5px;
+	user-select: none;
+}
+
+li {
+	list-style: none;
+}
+
+ul a {
+	color: #b3b3b3;
+}
+
+th {
+	text-align: left;
+	padding-left: 12px;
+}
+
+tr:nth-child(even) {
+	background-color: #1b1b1b;
+}
+
+tr {
+	border-collapse: separate;
+	border-left-color: rgb(128, 128, 128);
+	border-right-color: rgb(128, 128, 128);
+	border-top-color: rgb(128, 128, 128);
+	box-sizing: border-box;
+	color: rgb(179, 179, 179);
+	cursor: default;
+	line-height: 20px;
+	visibility: visible;
+	height: 22px;
+}
+
+tr.empty-row {
+	height: 22px;
+}
+
+tr.td:first-child {
+	width: 108px;
+}
+
+.unplayable {
+	opacity: 0.25;
+	color: red;
+}
+
+.unplayable * {
+	color: red;
+}
+
+.sort-indicator {
+	float: right;
+	font-size: 10px;
+	opacity: 0.5;
+}
+
+td {
+	vertical-align: top;
+	max-width: calc(2560px / 3);
+	box-sizing: border-box;
+	color: rgb(179, 179, 179);
+	cursor: default;
+	display: table-cell;
+	font-weight: 400;
+	line-height: 20px;
+	overflow-x: hidden;
+	overflow-y: hidden;
+	padding-left: 12px;
+	padding-right: 12px;
+	text-overflow: ellipsis;
+	text-transform: none;
+	user-select: none;
+	word-wrap: all;
+	visibility: visible;
+	white-space: nowrap;
+	-webkit-font-smoothing: antialiased;
+	-webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+	max-width: 400px;
+}
+
+td:hover {
+	text-decoration: underline;
+}
+
+.td-number, .td-date, .td-starred {
+	color: #717171;
+}
+
+.td-starred {
+	font-size: 15px;
+	width: 36px;
+}
+
+.td-name {
+	width: 400px;
+}
+
+.td-number {
+	width: 36px;
+}
+
+.td-artist {
+	width: 400px;
+}
+
+.td-album {
+	width: 400px;
+}
+
+.td-duration {
+	width: 93px;
+}
+
+.td-date {
+	width: 60px;
+}
+
+.td-starred .filled {
+	color: #d8ba58;
+}
+
+.album-td {
+	padding-left: 0px;
+	width: 108px;
+}
+
+.album-art {
+	position: absolute;
+	display: block;
+	width: 108px;
+	height: 108px;
+	background-image: url(https://f4.bcbits.com/img/a3877635330_5.jpg);
+	background-size: contain;
+	margin-right: 108px;
+}
+
+.album-top-row td {
+	border-top: 1px solid #2b2b2b;
+}

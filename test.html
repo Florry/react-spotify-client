@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Spotify Web Playback SDK Quick Start Tutorial</title>
+</head>
+
+<body>
+    <h1>Spotify Web Playback SDK Quick Start Tutorial</h1>
+    <h2>Open your console log:
+        <code>View > Developer > JavaScript Console</code>
+    </h2>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha256-k2WSCIexGzOj3Euiig+TlR8gA0EmPjuc79OEeY5L45g="
+        crossorigin="anonymous"></script>
+    <script src="https://sdk.scdn.co/spotify-player.js"></script>
+    <script>
+        var player;
+        window.onSpotifyWebPlaybackSDKReady = () => {
+            const token = "BQDr2csRXsqKefPctAOLubRB8t-6nWPDvTpIYBtmeTFOY50dqaTOig-HPRK36pC3n-yPuDib1xP31rzminvyzyVyXfAEf553hRs_01lT0eQDla9WY085EI3WXrS4L6jhJoHzIWPD3Ep0L2CR-jJp_5vDmq4lcT0SxJZhB_qR";
+            player = new Spotify.Player({
+                name: 'Web Playback SDK Quick Start Player',
+                getOAuthToken: cb => { cb(token); }
+            });
+
+            // Error handling
+            player.on('initialization_error', e => { console.error(e); });
+            player.on('authentication_error', e => { console.error(e); });
+            player.on('account_error', e => { console.error(e); });
+            player.on('playback_error', e => { console.error(e); });
+
+            // Playback status updates
+            player.on('player_state_changed', state => { console.log(state); });
+
+            // Ready
+            player.on('ready', data => {
+                let { device_id } = data;
+                console.log('Ready with Device ID', device_id);
+            });
+
+            // Connect to the player!
+            player.connect().then(() => {
+                player.resume().then(() => {
+                    console.log("Resumed!");
+                });
+            });
+
+            player.getCurrentState().then(state => {
+                if (state) {
+                    let { current_track, next_tracks } = state.track_window;
+
+                    console.log("Currently Playing", current_track);
+                    console.log("Playing Next", next_tracks[0]);
+                } else {
+                    console.error("The user is not playing music through the Web Playback SDK");
+                }
+            });
+
+            player.getVolume().then(volume => {
+                let volume_percentage = volume * 100;
+                console.log(`The volume of the player is ${volume_percentage}%`);
+            });
+
+            $("#prev").click(event => player.previousTrack());
+            $("#play").click(event => player.resume());
+            $("#pause").click(event => player.pause());
+            $("#next").click(event => player.nextTrack());
+
+        }
+
+
+    </script>
+    <button id="prev">prev</button>
+    <button id="play">play</button>
+    <button id="pause">pause</button>
+    <button id="next">next</button>
+</body>
+
+</html>
