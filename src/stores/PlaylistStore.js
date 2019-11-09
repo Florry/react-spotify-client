@@ -43,7 +43,7 @@ export default class PlaylistStore {
 				const timesToFetch = Math.ceil(response.total / LIMIT);
 
 				for (let i = 0; i < timesToFetch; i++)
-					runInAction(() => this.loadPlaylistsForLoggedInUser(this._getNextString(response.next).replace(`offset=${LIMIT}`, "offset=" + ((i + 1) * LIMIT))));
+					this.loadPlaylistsForLoggedInUser(this._getNextString(response.next).replace(`offset=${LIMIT}`, "offset=" + ((i + 1) * LIMIT)));
 			}
 		} catch (err) {
 			// console.error(err);
@@ -93,6 +93,8 @@ export default class PlaylistStore {
 		try {
 			const response = await APIClient.get(this.rootStore.stores.authStore.accessToken, next || playlist.tracks.href.replace(API_ROOT, ""));
 
+			response.items = response.items.filter(track => !!track.track);
+
 			response.items.map(track => this._tracks.set(track.track.uri, track));
 
 			if (!playlist.tracks.items)
@@ -109,7 +111,7 @@ export default class PlaylistStore {
 				const timesToFetch = Math.ceil(response.total / LIMIT);
 
 				for (let i = 0; i < timesToFetch; i++)
-					runInAction(() => this.loadTracksInPlaylist(playlistUri, this._getNextString(response.next).replace(`offset=${LIMIT}`, "offset=" + ((i + 1) * LIMIT))));
+					await this.loadTracksInPlaylist(playlistUri, this._getNextString(response.next).replace(`offset=${LIMIT}`, "offset=" + ((i + 1) * LIMIT)));
 			}
 		} catch (err) {
 			console.error(err);

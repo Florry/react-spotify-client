@@ -17,7 +17,7 @@ class Sidebar extends React.Component {
 	authStore = this.props.authStore;
 
 	async componentDidMount() {
-		this.playlistStore.loadPlaylistsForLoggedInUser();
+		// this.playlistStore.loadPlaylistsForLoggedInUser();
 	}
 
 	render() {

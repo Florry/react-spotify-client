@@ -20,25 +20,26 @@ export default class AlbumTrackRow extends React.Component {
 		return length;
 	}
 
+	shouldComponentUpdate() {
+		return false;
+	}
+
 	render() {
-		const { songs, offset } = this.props;
+		const { songs: inputSongs } = this.props;
+		const songs = [...inputSongs];
 
 		songs.sort((a, b) => {
 			const aDisc = a ? a.disc_number : 100;
 			const bDisc = b ? b.disc_number : 100;
+
+			return aDisc - bDisc;
+		});
+
+		songs.sort((a, b) => {
 			const aNumber = a ? a.track_number : 100;
 			const bNumber = b ? b.track_number : 100;
 
-			if (aDisc > bDisc)
-				return 1;
-			else if (aDisc < bDisc)
-				return -1;
-			else if (aNumber > bNumber)
-				return 1;
-			else if (aNumber < bNumber)
-				return -1;
-			else
-				return 0;
+			return aNumber - bNumber;
 		});
 
 		const additionalRows = this.getNumberOfRows(songs) - (songs.length - 1);
@@ -46,34 +47,35 @@ export default class AlbumTrackRow extends React.Component {
 		for (let i = 0; i < additionalRows; i++)
 			songs.push(null);
 
-		return (
-			songs.map((song, i) => {
-				// TODO: offset all tr with position absolute
+		const rows = [];
 
-				if (song === null)
-					return <tr
-						className="empty-row"
-						key={songs[i] ? songs[i].toString() : i.toString() + i.toString()}
+		songs.map((song, i) => {
+			if (song === null)
+				rows.push(
+					<div
+						className="tr empty-row"
+						key={(songs[0].track.album ? songs[0].track.album.uri : "") + "-empty-album-track-row-" + i.toString()}
 					>
-						<td />
-						<td />
-						<td />
-						<td />
-						<td />
-						<td />
-						<td />
-						<td />
-					</tr>;
-
+						<div className="td album-td" />
+						<div className="td td-starred" />
+						<div className="td td-number" />
+						<div className="td td-name" />
+						<div className="td td-artist" />
+						<div className="td td-duration" />
+						<div className="td td-album" />
+						<div className="td td-date" />
+					</div>
+				);
+			else {
 				const { added_at: added } = song;
-				const { name, artists, album, playable = true, duration_ms: duration, track_number: number } = song.track;
+				const { name, artists = [], album = { images: [] }, playable = true, duration_ms: duration, track_number: number } = song.track;
 
-				let biggestDimensions = 0;
+				let smallestDimensions = 10000;
 				let albumCover;
 
 				album.images.forEach(img => {
-					if (img.width > biggestDimensions) {
-						biggestDimensions = img.width;
+					if (img.width < smallestDimensions) {
+						smallestDimensions = img.width;
 						albumCover = img.url;
 					}
 				});
@@ -81,14 +83,15 @@ export default class AlbumTrackRow extends React.Component {
 				const artistsString = artists.map(artist => artist.name).join(",")
 				const isStarred = !!songs[i] && starredSongs.starred.includes(songs[i]); // TODO: songs[i] is not sorted? 🤔
 
-				return (
-					<tr
+				rows.push(
+					<div
+						hidden={this.props.hidden}
 						title={songs[i]}
-						className={`${i === 0 ? "album-top-row" : ""} ${!playable ? "unplayable" : ""}`}
-						key={"album-track-row" + i.toString()}
+						className={`tr ${i === 0 ? "album-top-row" : ""} ${!playable ? "unplayable" : ""}`}
+						key={album.uri + "-album-track-row-" + i.toString()}
 					>
-						<td
-							className="album-td"
+						<div
+							className="td album-td"
 						>
 							<div
 								style={{
@@ -99,48 +102,49 @@ export default class AlbumTrackRow extends React.Component {
 										? "album-art single-song"
 										: "album-art")
 									: ""} />
-						</td>
-						<td
-							className="td-starred"
+						</div>
+						<div
+							className="td td-starred"
 						>
 							{isStarred ? <span className="filled">★</span> : "☆"}
-						</td>
-						<td
-							className="td-number"
+						</div>
+						<div
+							className="td td-number"
 						>
 							{number}
-						</td>
-						<td
-							className="td-name"
+						</div>
+						<div
+							className="td td-name"
 						>
 							{name}
-						</td>
-						<td
-							className="td-artist"
+						</div>
+						<div
+							className="td td-artist"
 						>
 							{artistsString}
-						</td>
-						<td
-							className="td-duration"
+						</div>
+						<div
+							className="td td-duration"
 						>
 							{Utils.duration(duration)}
-						</td>
-						<td
-							className="td-album"
+						</div>
+						<div
+							className="td td-album"
 							id={album.uri}
 						>
 							{album.name}
-						</td>
-						<td
-							className="td-date"
+						</div>
+						<div
+							className="td td-date"
 						>
-							{added.substring(0, 10)}
-						</td>
-					</tr>
+							{added && added !== "1970-01-01T00:00:00Z" ? added.substring(0, 10) : ""}
+						</div>
+					</div>
 				);
+			}
+		});
 
-			})
-		);
+		return <div key={songs[0].track.album + "playlist"}>{rows}</div>;
 	}
 
 }

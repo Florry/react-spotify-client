@@ -15,8 +15,10 @@ export default () => {
 			<Route path={SPOTIFY_API_CALLBACK} component={GetAuthToken} exact />
 
 			<Route path={PLAYLIST} component={props => <PlaylistPage {...props} />} exact />
+			{/*
+			<Redirect from="/" to={"/playlist/spotify:playlist:4HFv8kVXrc7JLEg21RJhxt"} /> */}
 
-			<Redirect from="/" to={"/playlist/spotify:playlist:4HFv8kVXrc7JLEg21RJhxt"} />
+			<Route exact path="/" render={() => (<Redirect to="/playlist/spotify:playlist:4HFv8kVXrc7JLEg21RJhxt" />)} />
 
 		</Switch>
 	);
