@@ -111,6 +111,14 @@ th, .th {
 	/* max-width: 400px; */
 }
 
+.th.playlist-header {
+	position: fixed;
+	background-color: #181818;
+	z-index: 4000;
+	margin-top: -22px;
+	border-bottom: 1px solid #222;
+}
+
 td:hover {
 	text-decoration: underline;
 }

@@ -347,7 +347,7 @@ class PlaylistPage extends React.Component {
 		if (!!this._heightCache[track.albumUri])
 			return this._heightCache[track.albumUri];
 
-		this._heightCache[track] = (TEMP_TRACK_ROW_HEIGHT * track.numberOfRows) + 1;
+		this._heightCache[track] = (TEMP_TRACK_ROW_HEIGHT * track.numberOfRows);
 
 		return this._heightCache[track];
 	}
@@ -400,14 +400,17 @@ class PlaylistPage extends React.Component {
 		return (
 			<div
 				style={{
-					left: 450,
 					width: 1582,
-					position: "relative"
+					position: "relative",
+					paddingLeft: "450px",
+					marginRight: "auto",
+					marginLeft: "auto",
+					marginTop: "22px"
 				}}
 			>
 				<div>
 
-					<div className="th">
+					<div className="th playlist-header">
 						<div className="td album-td"> </div>
 						<div className="td td-starred"> </div>
 						<div className="td td-number"> </div>
@@ -424,7 +427,8 @@ class PlaylistPage extends React.Component {
 					paddingTop: currentOffset,
 					overflow: "hidden",
 					display: "block",
-					height: playlistHeight
+					height: playlistHeight,
+					marginTop: "22px"
 				}}>
 					{
 						songsToRender.map((currentTrackStructure, i) =>
