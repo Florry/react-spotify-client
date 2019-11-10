@@ -117,6 +117,7 @@ th, .th {
 	z-index: 4000;
 	margin-top: -22px;
 	border-bottom: 1px solid #222;
+	width: 1582px;
 }
 
 td:hover {
@@ -177,4 +178,62 @@ td:hover {
 
 .album-top-row td {
 	border-top: 1px solid #222;
+}
+
+.cd-divider {
+	border-top: 1px solid #313131;
+}
+
+.cd-divider:before {
+	/* height: 22px;
+	width: 50px;
+	content: attr(cd-number);
+	display: block;
+	position: absolute; */
+}
+
+.player {
+	color: white;
+	position: fixed;
+	bottom: 0px;
+	width: 400px;
+	height: 548px;
+	background-color: #282828;
+	border-top: 1px solid #121212;
+	z-index: 401;
+}
+
+.now-playing {
+	padding: 14px;
+}
+
+.album-cover {
+	background-image: url(https://i.scdn.co/image/ab67616d00004851f1ab528856e0918a108d49fc);
+	background-size: 400px 400px;
+	width: 400px;
+	height: 400px;
+	background-size: contain;
+}
+
+.controls--button-group {
+	margin-left: auto;
+	margin-right: auto;
+	width: 250px;
+}
+
+#player-button-shuffle, #player-button-previous, #player-button-play-pause, #player-button-next, #player-button-repeat {
+	width: 50px;
+	height: 50px;
+}
+
+.sidebar {
+	color: #fff;
+	top: 0;
+	left: 0;
+	position: fixed;
+	height: calc(100% - 548px);
+	max-height: 100%;
+	overflow-y: scroll;
+	width: 400px;
+	z-index: 400;
 }

@@ -1,11 +1,17 @@
 import React from "react";
 import Utils from "../utils/Utils";
+import { inject } from "mobx-react";
 
 // @ts-ignore
 const starredSongs = require("../json/spotifyStarred.json");
 
-export default class AlbumTrackRow extends React.Component {
+/** @typedef {import("../stores/PlayerStore").default} PlayerStore */
 
+@inject("playerStore")
+class AlbumTrackRow extends React.Component {
+
+	/** @type {PlayerStore} */
+	playerStore = this.props.playerStore;
 	/**
 	 * @param {Array<?>} metadata
 	*/
@@ -32,16 +38,13 @@ export default class AlbumTrackRow extends React.Component {
 			// TODO: If we sort by CUSTOM this shouldn't be sorted!
 			const aDisc = a ? Number.parseInt(a.track.disc_number) : 100;
 			const bDisc = b ? Number.parseInt(b.track.disc_number) : 100;
-
-			return aDisc - bDisc;
-		});
-
-		songs.sort((a, b) => {
-			// TODO: If we sort by CUSTOM this shouldn't be sorted!
 			const aNumber = a ? Number.parseInt(a.track.track_number) : 100;
 			const bNumber = b ? Number.parseInt(b.track.track_number) : 100;
 
-			return aNumber - bNumber;
+			if (aDisc - bDisc === 0)
+				return aNumber - bNumber;
+			else
+				return aDisc - bDisc;
 		});
 
 		const additionalRows = this.getNumberOfRows(songs) - (songs.length - 1);
@@ -70,7 +73,17 @@ export default class AlbumTrackRow extends React.Component {
 				);
 			else {
 				const { added_at: added } = song;
-				const { name, artists = [], album = { images: [] }, playable = true, duration_ms: duration, track_number: number, is_local: isLocal } = song.track;
+				const {
+					name,
+					uri,
+					artists = [],
+					album = { images: [] },
+					playable = true,
+					duration_ms: duration,
+					track_number: trackNumber,
+					disc_number: discNumber,
+					is_local: isLocal
+				} = song.track;
 
 				let smallestDimensions = 10000;
 				let albumCover;
@@ -89,9 +102,16 @@ export default class AlbumTrackRow extends React.Component {
 
 				rows.push(
 					<div
+						onClick={() => this.playerStore.playTrack(uri)}
 						hidden={this.props.hidden}
 						title={songs[i].track.name}
-						className={`tr ${i === 0 ? "album-top-row" : ""} ${songUnplayable ? "unplayable" : ""}`}
+						className={`
+							tr
+							${!!songs[i - 1] && songs[i - 1].track.disc_number !== discNumber ? "cd-divider" : ""}
+							${i === 0 ? "album-top-row" : ""}
+							${songUnplayable ? "unplayable" : ""}
+						`}
+						cd-number={`cd ${discNumber}`}
 						key={album.uri + "-album-track-row-" + i.toString()}
 					>
 						<div
@@ -115,7 +135,7 @@ export default class AlbumTrackRow extends React.Component {
 						<div
 							className="td td-number"
 						>
-							{number}
+							{trackNumber}
 						</div>
 						<div
 							className="td td-name"
@@ -153,100 +173,102 @@ export default class AlbumTrackRow extends React.Component {
 
 }
 
-const o = {
-	"added_at": "2019-10-30T17:20:20Z",
-	"added_by": {
-		"external_urls": {
-			"spotify": "https://open.spotify.com/user/counterwille"
-		},
-		"href": "https://api.spotify.com/v1/users/counterwille",
-		"id": "counterwille",
-		"type": "user",
-		"uri": "spotify:user:counterwille"
-	},
-	"is_local": false,
-	"primary_color": null,
-	"track": {
-		"album": {
-			"album_type": "album",
-			"artists": [
-				{
-					"external_urls": {
-						"spotify": "https://open.spotify.com/artist/0L8ExT028jH3ddEcZwqJJ5"
-					},
-					"href": "https://api.spotify.com/v1/artists/0L8ExT028jH3ddEcZwqJJ5",
-					"id": "0L8ExT028jH3ddEcZwqJJ5",
-					"name": "Red Hot Chili Peppers",
-					"type": "artist",
-					"uri": "spotify:artist:0L8ExT028jH3ddEcZwqJJ5"
-				}
-			],
-			"available_markets": [
-			],
-			"external_urls": {
-				"spotify": "https://open.spotify.com/album/7xl50xr9NDkd3i2kBbzsNZ"
-			},
-			"href": "https://api.spotify.com/v1/albums/7xl50xr9NDkd3i2kBbzsNZ",
-			"id": "7xl50xr9NDkd3i2kBbzsNZ",
-			"images": [
-				{
-					"height": 640,
-					"url": "https://i.scdn.co/image/ab67616d0000b27309fd83d32aee93dceba78517",
-					"width": 640
-				},
-				{
-					"height": 300,
-					"url": "https://i.scdn.co/image/ab67616d00001e0209fd83d32aee93dceba78517",
-					"width": 300
-				},
-				{
-					"height": 64,
-					"url": "https://i.scdn.co/image/ab67616d0000485109fd83d32aee93dceba78517",
-					"width": 64
-				}
-			],
-			"name": "Stadium Arcadium",
-			"release_date": "2006-05-09",
-			"release_date_precision": "day",
-			"total_tracks": 29,
-			"type": "album",
-			"uri": "spotify:album:7xl50xr9NDkd3i2kBbzsNZ"
-		},
-		"artists": [
-			{
-				"external_urls": {
-					"spotify": "https://open.spotify.com/artist/0L8ExT028jH3ddEcZwqJJ5"
-				},
-				"href": "https://api.spotify.com/v1/artists/0L8ExT028jH3ddEcZwqJJ5",
-				"id": "0L8ExT028jH3ddEcZwqJJ5",
-				"name": "Red Hot Chili Peppers",
-				"type": "artist",
-				"uri": "spotify:artist:0L8ExT028jH3ddEcZwqJJ5"
-			}
-		],
-		"available_markets": [],
-		"disc_number": 1,
-		"duration_ms": 309800,
-		"episode": false,
-		"explicit": false,
-		"external_ids": {
-			"isrc": "USWB10601602"
-		},
-		"external_urls": {
-			"spotify": "https://open.spotify.com/track/3L2Nyi3T7XabH8EEZFLDdX"
-		},
-		"href": "https://api.spotify.com/v1/tracks/3L2Nyi3T7XabH8EEZFLDdX",
-		"id": "3L2Nyi3T7XabH8EEZFLDdX",
-		"is_local": false,
-		"name": "Wet Sand",
-		"popularity": 64,
-		"preview_url": "https://p.scdn.co/mp3-preview/fc943bd27a6525c0cd6afc53c86e3978a1a23ade?cid=e3ab4c22331045f0b7f6e57235b58b47",
-		"track": true,
-		"track_number": 13,
-		"type": "track",
-		"uri": "spotify:track:3L2Nyi3T7XabH8EEZFLDdX"
-	},
-	"video_thumbnail": {
-		"url": null
-	}
-};
+export default AlbumTrackRow;
+
+// const o = {
+// 	"added_at": "2019-10-30T17:20:20Z",
+// 	"added_by": {
+// 		"external_urls": {
+// 			"spotify": "https://open.spotify.com/user/counterwille"
+// 		},
+// 		"href": "https://api.spotify.com/v1/users/counterwille",
+// 		"id": "counterwille",
+// 		"type": "user",
+// 		"uri": "spotify:user:counterwille"
+// 	},
+// 	"is_local": false,
+// 	"primary_color": null,
+// 	"track": {
+// 		"album": {
+// 			"album_type": "album",
+// 			"artists": [
+// 				{
+// 					"external_urls": {
+// 						"spotify": "https://open.spotify.com/artist/0L8ExT028jH3ddEcZwqJJ5"
+// 					},
+// 					"href": "https://api.spotify.com/v1/artists/0L8ExT028jH3ddEcZwqJJ5",
+// 					"id": "0L8ExT028jH3ddEcZwqJJ5",
+// 					"name": "Red Hot Chili Peppers",
+// 					"type": "artist",
+// 					"uri": "spotify:artist:0L8ExT028jH3ddEcZwqJJ5"
+// 				}
+// 			],
+// 			"available_markets": [
+// 			],
+// 			"external_urls": {
+// 				"spotify": "https://open.spotify.com/album/7xl50xr9NDkd3i2kBbzsNZ"
+// 			},
+// 			"href": "https://api.spotify.com/v1/albums/7xl50xr9NDkd3i2kBbzsNZ",
+// 			"id": "7xl50xr9NDkd3i2kBbzsNZ",
+// 			"images": [
+// 				{
+// 					"height": 640,
+// 					"url": "https://i.scdn.co/image/ab67616d0000b27309fd83d32aee93dceba78517",
+// 					"width": 640
+// 				},
+// 				{
+// 					"height": 300,
+// 					"url": "https://i.scdn.co/image/ab67616d00001e0209fd83d32aee93dceba78517",
+// 					"width": 300
+// 				},
+// 				{
+// 					"height": 64,
+// 					"url": "https://i.scdn.co/image/ab67616d0000485109fd83d32aee93dceba78517",
+// 					"width": 64
+// 				}
+// 			],
+// 			"name": "Stadium Arcadium",
+// 			"release_date": "2006-05-09",
+// 			"release_date_precision": "day",
+// 			"total_tracks": 29,
+// 			"type": "album",
+// 			"uri": "spotify:album:7xl50xr9NDkd3i2kBbzsNZ"
+// 		},
+// 		"artists": [
+// 			{
+// 				"external_urls": {
+// 					"spotify": "https://open.spotify.com/artist/0L8ExT028jH3ddEcZwqJJ5"
+// 				},
+// 				"href": "https://api.spotify.com/v1/artists/0L8ExT028jH3ddEcZwqJJ5",
+// 				"id": "0L8ExT028jH3ddEcZwqJJ5",
+// 				"name": "Red Hot Chili Peppers",
+// 				"type": "artist",
+// 				"uri": "spotify:artist:0L8ExT028jH3ddEcZwqJJ5"
+// 			}
+// 		],
+// 		"available_markets": [],
+// 		"disc_number": 1,
+// 		"duration_ms": 309800,
+// 		"episode": false,
+// 		"explicit": false,
+// 		"external_ids": {
+// 			"isrc": "USWB10601602"
+// 		},
+// 		"external_urls": {
+// 			"spotify": "https://open.spotify.com/track/3L2Nyi3T7XabH8EEZFLDdX"
+// 		},
+// 		"href": "https://api.spotify.com/v1/tracks/3L2Nyi3T7XabH8EEZFLDdX",
+// 		"id": "3L2Nyi3T7XabH8EEZFLDdX",
+// 		"is_local": false,
+// 		"name": "Wet Sand",
+// 		"popularity": 64,
+// 		"preview_url": "https://p.scdn.co/mp3-preview/fc943bd27a6525c0cd6afc53c86e3978a1a23ade?cid=e3ab4c22331045f0b7f6e57235b58b47",
+// 		"track": true,
+// 		"track_number": 13,
+// 		"type": "track",
+// 		"uri": "spotify:track:3L2Nyi3T7XabH8EEZFLDdX"
+// 	},
+// 	"video_thumbnail": {
+// 		"url": null
+// 	}
+// };

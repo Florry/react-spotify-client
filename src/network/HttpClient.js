@@ -21,7 +21,7 @@ class HttpClient {
 
     /**
      * @param {String} path
-     * @param {Object} body
+     * @param {Object=} body
      */
 	post(accessToken, path, body) {
 		return this._request("POST", accessToken, path, body);
@@ -29,7 +29,7 @@ class HttpClient {
 
     /**
      * @param {String} path
-     * @param {Object} body
+     * @param {Object=} body
      */
 	delete(accessToken, path, body) {
 		return this._request("DELETE", accessToken, path, body);
@@ -37,7 +37,7 @@ class HttpClient {
 
     /**
      * @param {String} path
-     * @param {Object} body
+     * @param {Object=} body
      */
 	put(accessToken, path, body) {
 		return this._request("PUT", accessToken, path, body);
@@ -47,12 +47,16 @@ class HttpClient {
      * @param {String} method
      * @param {String} path
      * @param {Object=} body
+     * @param {Boolean=} pathIsFull
+     * @param {Object=} additionalHeaders
      */
-	async _request(method, accessToken, path, body = null) {
+	async _request(method, accessToken, path, body = null, pathIsFull, additionalHeaders) {
 		const options = {
 			method: method,
 			headers: new Headers({
-				'Authorization': 'Bearer ' + accessToken
+				"Content-Type": "application/json",
+				Authorization: "Bearer " + accessToken,
+				...additionalHeaders
 			})
 		};
 
@@ -60,7 +64,7 @@ class HttpClient {
 			options.body = JSON.stringify(body);
 
 		try {
-			const response = await fetch(this.apiRoot + path, options);
+			const response = await fetch(pathIsFull ? path : this.apiRoot + path, options);
 
 			let responseBody = {};
 

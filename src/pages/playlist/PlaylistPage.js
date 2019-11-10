@@ -1,11 +1,11 @@
 import React from "react";
 import AlbumTrackRow from "../../common/AlbumTrackRow";
 import { inject, observer } from "mobx-react";
-import VirtualList from "react-virtual-list";
+
 // // @ts-ignore
 // const playlist = require("../../json/spotifyPlaylistSongs.json");
 // @ts-ignore
-const playlist = require("../../json/mock-playlist.json");
+// const playlist = require("../../json/mock-playlist.json");
 // // @ts-ignore
 // const metadata = require("../../json/spotifyMetadata.json");
 
@@ -438,7 +438,6 @@ class PlaylistPage extends React.Component {
 							/>
 						)
 					}
-
 				</div>
 
 				<button onClick={() => this.saveData(tracks, "mock-playlist.json")}>Save track data</button>

@@ -14,7 +14,11 @@ export const API_SCOPES = [
 	"user-read-private",
 	"user-read-email",
 	"user-top-read",
-	"user-read-playback-state"
+	"user-read-playback-state",
+	"streaming",
+	"user-read-currently-playing",
+	"app-remote-control",
+	"user-modify-playback-state"
 ];
 
 export const API_ROOT_ACCOUNTS = "https://accounts.spotify.com";
@@ -24,6 +28,10 @@ export const API_ROOT = "https://api.spotify.com/v1/";
 export const API_ROOT_CONNECT = "";
 
 export const PATH_AUTORIZE = "authorize";
+
+export const PATH_PLAY_TRACK = "me/player/play";
+export const PATH_PLAY = "me/player/play";
+export const PATH_PAUSE = "me/player/pause";
 
 export const PATH_LOGGED_IN_USER_PLAYLISTS = "me/playlists";
 export const PATH_GET_PLAYLIST_BY_ID = "playlists/:playlistId";

@@ -5,9 +5,10 @@ import { PLAYLIST } from "../constants/routes";
 
 /** @typedef {import("../stores/AuthStore").default} AuthStore */
 /** @typedef {import("../stores/PlaylistStore").default} PlaylistStore */
+/** @typedef {import("../stores/PlayerStore").default} PlayerStore */
 
 @observer
-@inject("playlistStore", "authStore")
+@inject("playlistStore", "authStore", "playerStore")
 class Sidebar extends React.Component {
 
 	/** @type {PlaylistStore} */
@@ -16,6 +17,9 @@ class Sidebar extends React.Component {
 	/** @type {AuthStore} */
 	authStore = this.props.authStore;
 
+	/** @type {PlayerStore} */
+	playerStore = this.props.playerStore;
+
 	async componentDidMount() {
 		await this.playlistStore.loadPlaylistsForLoggedInUser();
 		this.forceUpdate();
@@ -23,20 +27,15 @@ class Sidebar extends React.Component {
 
 	render() {
 		const playlists = this.playlistStore.playlists;
+		const ready = this.playerStore.ready;
 
 		return (
 			<div
-				style={{
-					color: "#fff",
-					top: 0,
-					left: 0,
-					position: "fixed",
-					height: "100%",
-					maxHeight: "100%",
-					overflowY: "scroll",
-					width: 400
-				}}
+				className="sidebar"
 			>
+				{
+					!ready ? <h2>Playback OFFLINE</h2> : <span />
+				}
 				<h2>Library</h2>
 				<h2>Playlists</h2>
 				<ul>

@@ -4,6 +4,8 @@ import APIClient from "../network/APIClient";
 
 /** @typedef {import("./RootStore").default} RootStore*/
 
+// TODO: investigate https://spclient.wg.spotify.com/playlist/v2/user/counterwille/rootlist?decorate=revision%2Clength%2Cattributes%2Ctimestamp%2Cowner&market=from_token
+
 export default class PlaylistStore {
 
 	/**
@@ -11,10 +13,6 @@ export default class PlaylistStore {
 	*/
 	constructor(rootStore) {
 		this.rootStore = rootStore;
-
-		setInterval(() => {
-
-		}, 5000);
 	}
 
 	@observable
