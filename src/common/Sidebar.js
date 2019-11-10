@@ -6,8 +6,8 @@ import { PLAYLIST } from "../constants/routes";
 /** @typedef {import("../stores/AuthStore").default} AuthStore */
 /** @typedef {import("../stores/PlaylistStore").default} PlaylistStore */
 
-@inject("playlistStore", "authStore")
 @observer
+@inject("playlistStore", "authStore")
 class Sidebar extends React.Component {
 
 	/** @type {PlaylistStore} */
@@ -17,12 +17,12 @@ class Sidebar extends React.Component {
 	authStore = this.props.authStore;
 
 	async componentDidMount() {
-		// this.playlistStore.loadPlaylistsForLoggedInUser();
+		await this.playlistStore.loadPlaylistsForLoggedInUser();
+		this.forceUpdate();
 	}
 
 	render() {
 		const playlists = this.playlistStore.playlists;
-		const tracks = this.playlistStore.tracks;
 
 		return (
 			<div

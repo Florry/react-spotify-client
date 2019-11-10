@@ -43,7 +43,7 @@ export default class PlaylistStore {
 				const timesToFetch = Math.ceil(response.total / LIMIT);
 
 				for (let i = 0; i < timesToFetch; i++)
-					this.loadPlaylistsForLoggedInUser(this._getNextString(response.next).replace(`offset=${LIMIT}`, "offset=" + ((i + 1) * LIMIT)));
+					await this.loadPlaylistsForLoggedInUser(this._getNextString(response.next).replace(`offset=${LIMIT}`, "offset=" + ((i + 1) * LIMIT)));
 			}
 		} catch (err) {
 			// console.error(err);

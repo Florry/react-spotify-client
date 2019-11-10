@@ -20,7 +20,7 @@ export default class AlbumTrackRow extends React.Component {
 		return length;
 	}
 
-	shouldComponentUpdate() {
+	shouldComponentUpdate(nextProps, nextState, nextContext) {
 		return false;
 	}
 
@@ -29,15 +29,17 @@ export default class AlbumTrackRow extends React.Component {
 		const songs = [...inputSongs];
 
 		songs.sort((a, b) => {
-			const aDisc = a ? a.disc_number : 100;
-			const bDisc = b ? b.disc_number : 100;
+			// TODO: If we sort by CUSTOM this shouldn't be sorted!
+			const aDisc = a ? Number.parseInt(a.track.disc_number) : 100;
+			const bDisc = b ? Number.parseInt(b.track.disc_number) : 100;
 
 			return aDisc - bDisc;
 		});
 
 		songs.sort((a, b) => {
-			const aNumber = a ? a.track_number : 100;
-			const bNumber = b ? b.track_number : 100;
+			// TODO: If we sort by CUSTOM this shouldn't be sorted!
+			const aNumber = a ? Number.parseInt(a.track.track_number) : 100;
+			const bNumber = b ? Number.parseInt(b.track.track_number) : 100;
 
 			return aNumber - bNumber;
 		});
@@ -68,7 +70,7 @@ export default class AlbumTrackRow extends React.Component {
 				);
 			else {
 				const { added_at: added } = song;
-				const { name, artists = [], album = { images: [] }, playable = true, duration_ms: duration, track_number: number } = song.track;
+				const { name, artists = [], album = { images: [] }, playable = true, duration_ms: duration, track_number: number, is_local: isLocal } = song.track;
 
 				let smallestDimensions = 10000;
 				let albumCover;
@@ -81,13 +83,15 @@ export default class AlbumTrackRow extends React.Component {
 				});
 
 				const artistsString = artists.map(artist => artist.name).join(",")
-				const isStarred = !!songs[i] && starredSongs.starred.includes(songs[i]); // TODO: songs[i] is not sorted? 🤔
+				const isStarred = !!songs[i] && starredSongs.starred.includes(songs[i].track.uri); // TODO: songs[i] is not sorted? 🤔
+
+				const songUnplayable = !playable || !!isLocal;
 
 				rows.push(
 					<div
 						hidden={this.props.hidden}
-						title={songs[i]}
-						className={`tr ${i === 0 ? "album-top-row" : ""} ${!playable ? "unplayable" : ""}`}
+						title={songs[i].track.name}
+						className={`tr ${i === 0 ? "album-top-row" : ""} ${songUnplayable ? "unplayable" : ""}`}
 						key={album.uri + "-album-track-row-" + i.toString()}
 					>
 						<div
@@ -95,7 +99,7 @@ export default class AlbumTrackRow extends React.Component {
 						>
 							<div
 								style={{
-									backgroundImage: `url(${albumCover}?url=https://github.com/Florry)`
+									backgroundImage: albumCover ? `url(${albumCover}?url=https://github.com/Florry)` : "url(../images/no-cover-art.png)"
 								}}
 								className={i === 0
 									? (songs.length === 1

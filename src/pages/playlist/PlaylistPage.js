@@ -33,6 +33,7 @@ const SORT_TYPES = {
 };
 
 const TEMP_TRACK_ROW_HEIGHT = 22;
+const IGNORE_HEIGHT_CACHE = true;
 
 /** @typedef {import("../../stores/PlaylistStore").default} PlaylistStore */
 
@@ -51,8 +52,9 @@ class PlaylistPage extends React.Component {
 		scrollTop: window.scrollY,
 		playlistId: this.props.match.params.playlistId,
 		currentOffset: 0,
+		originalTrackOrder: [],
 		tracks: [],
-		trackPlaylistItems: [],
+		trackPlaylistItems: [], // only save uris
 		songsToRender: [],
 		firstTime: true,
 		playlistHeight: 0
@@ -61,45 +63,160 @@ class PlaylistPage extends React.Component {
 		// trackPlaylistItems: this.getTrackIPlaylisttems(playlist)
 	};
 
-	currentNumberOfRows = -1;
+	_nextTenHeightCache = {};
+	_heightCache = {};
+	_heightBeforeCache = {};
+	_allTracksCache = 0;
 
 	async componentDidMount() {
 		window.addEventListener("scroll", () => this.handleScroll());
 
 		// // TODO:
-		// this.playlistStore.loadTracksInPlaylist(this.state.playlistId).then(async () => {
-		// 	const tracks = this.playlistStore.getTracksInPlaylist(this.state.playlistId);
-		// 	const trackPlaylistItems = this.getTrackIPlaylisttems(tracks);
+		this.playlistStore.loadTracksInPlaylist(this.state.playlistId).then(async () => {
+			const tracks = this.playlistStore.getTracksInPlaylist(this.state.playlistId);
+			const originalTrackOrder = [...tracks];
+			const trackPlaylistItems = this.getTrackPlaylistItems(tracks);
 
-		// 	await this.setState({
-		// 		tracks,
-		// 		trackPlaylistItems,
-		// 		...this.getUpdatedState()
-		// 	});
+			await this.setState({
+				originalTrackOrder,
+				tracks,
+				trackPlaylistItems,
+				...this.getUpdatedState()
+			});
 
-		// 	this.state.trackPlaylistItems.forEach((track, i) => this.getHeightBeforeTrackRow(this.state.trackPlaylistItems, i));
-		// });
+			this.state.trackPlaylistItems.forEach((track, i) => this.getHeightBeforeTrackRow(this.state.trackPlaylistItems, i));
 
-		const tracks = playlist;
-		const trackPlaylistItems = this.getTrackIPlaylisttems(tracks);
-
-		await this.setState({
-			tracks,
-			trackPlaylistItems,
-			...this.getUpdatedState()
+			this.handleScroll();
 		});
 
-		this.state.trackPlaylistItems.forEach((track, i) => this.getHeightBeforeTrackRow(this.state.trackPlaylistItems, i));
+		// const tracks = playlist;
+		// const trackPlaylistItems = this.getTrackPlaylistItems(tracks);
+		// const originalTrackOrder = [...tracks];
 
-		this.getHeightOfAllTracks(this.state.trackPlaylistItems, true);
+		// trackPlaylistItems.forEach((track, i) => this.getHeightBeforeTrackRow(trackPlaylistItems, i));
+
+		// this.getHeightOfAllTracks(trackPlaylistItems, true);
+
+		// await this.setState({
+		// 	originalTrackOrder,
+		// 	tracks,
+		// 	trackPlaylistItems,
+		// 	...this.getUpdatedState()
+		// });
 	}
 
 	componentWillUnmount() {
 		window.removeEventListener("scroll", () => this.handleScroll());
 	}
 
-	async sort(sortBy) {
+	sort(inputSortBy) {
+		let { tracks, originalTrackOrder, sortOrder, sortBy } = this.state;
 
+		if (inputSortBy === this.state.sortBy) {
+			sortOrder = -sortOrder;
+
+			if (sortOrder === 1)
+				sortBy = SORT_TYPES.CUSTOM;
+		} else {
+			sortBy = inputSortBy;
+			sortOrder = 1;
+		}
+
+		let sortedTracks = [...tracks];
+
+		switch (sortBy) {
+			case SORT_TYPES.CUSTOM: {
+				sortedTracks = [...originalTrackOrder];
+				break;
+			}
+			case SORT_TYPES.TITLE: {
+				sortedTracks.sort((a, b) => {
+					if (a.track.name > b.track.name)
+						return 1 * sortOrder;
+					else if (a.track.name < b.track.name)
+						return -1 * sortOrder;
+					else
+						return 0;
+				});
+
+				break;
+			}
+			// case SORT_TYPES.ALBUM: {
+			// 	const sortedMetadata = metadata;
+
+			// 	sortedMetadata.sort((a, b) => {
+			// 		if (a.album.name > b.album.name)
+			// 			return 1 * sortOrder;
+			// 		else if (a.album.name < b.album.name)
+			// 			return -1 * sortOrder;
+			// 		else
+			// 			return 0;
+			// 	});
+
+			// 	this.setState({ metadata: sortedMetadata });
+
+			// 	break;
+			// }
+			// case SORT_TYPES.ARTIST: {
+			// 	const sortedMetadata = metadata;
+
+			// 	sortedMetadata.sort((a, b) => {
+			// 		if (a.artistsString > b.artistsString)
+			// 			return 1 * sortOrder;
+			// 		else if (a.artistsString < b.artistsString)
+			// 			return -1 * sortOrder;
+			// 		else
+			// 			return 0;
+			// 	});
+
+			// 	this.setState({ metadata: sortedMetadata });
+
+			// 	break;
+			// }
+			// case SORT_TYPES.TIME: {
+			// 	const sortedMetadata = metadata;
+
+			// 	sortedMetadata.sort((a, b) => {
+			// 		if (a.duration > b.duration)
+			// 			return 1 * sortOrder;
+			// 		else if (a.duration < b.duration)
+			// 			return -1 * sortOrder;
+			// 		else
+			// 			return 0;
+			// 	});
+
+			// 	this.setState({ metadata: sortedMetadata });
+
+			// 	break;
+			// }
+			case SORT_TYPES.ADDED: {
+				// TODO:
+				break;
+			}
+			default:
+				break;
+		}
+
+		this._nextTenHeightCache = {};
+		this._heightCache = {};
+		this._heightBeforeCache = {};
+		this._allTracksCache = 0;
+
+		const sortedTrackPlaylistItems = this.getTrackPlaylistItems(sortedTracks);
+
+		sortedTrackPlaylistItems.forEach((track, i) => this.getHeightBeforeTrackRow(sortedTrackPlaylistItems, i));
+
+		this.getHeightOfAllTracks(sortedTrackPlaylistItems, false);
+
+		this.setState({
+			tracks: sortedTracks,
+			trackPlaylistItems: sortedTrackPlaylistItems,
+			sortBy,
+			sortOrder,
+			...this.getUpdatedState()
+		});
+
+		// this.handleScroll();
 	}
 
 	handleScroll(e) {
@@ -107,6 +224,20 @@ class PlaylistPage extends React.Component {
 	}
 
 	getUpdatedState() {
+		const getHeightForNextTenTracks = (inputI) => {
+			if (!!this._nextTenHeightCache[inputI])
+				return this._nextTenHeightCache[inputI];
+
+			let height = 0;
+
+			for (let i = 0; i < 10; i++)
+				height += this.getHeightOfTrack(trackPlaylistItems[inputI + i]);
+
+			this._nextTenHeightCache[inputI] = height;
+
+			return height;
+		};
+
 		const { scrollY: scrollTop } = window;
 		const { trackPlaylistItems } = this.state;
 
@@ -115,8 +246,9 @@ class PlaylistPage extends React.Component {
 		for (let i = 0; i < trackPlaylistItems.length; i++) {
 			const currentTrackHeight = this.getHeightOfTrack(trackPlaylistItems[i]);
 			const heightBeforeTrack = this.getHeightBeforeTrackRow(trackPlaylistItems, i);
+			const nextTenTracksHeight = getHeightForNextTenTracks(i);
 
-			if (scrollTop > heightBeforeTrack + currentTrackHeight + 44)
+			if (scrollTop > heightBeforeTrack + currentTrackHeight + nextTenTracksHeight + 44)
 				currentOffset += currentTrackHeight;
 		}
 
@@ -128,18 +260,17 @@ class PlaylistPage extends React.Component {
 
 		for (let i = 0; i < trackPlaylistItems.length; i++) {
 			const currentTrackStructure = trackPlaylistItems[i];
-			const currentTrackHeight = this.getHeightOfTrack(currentTrackStructure);
-			const nextCurrentTrackHeight = this.getHeightOfTrack(trackPlaylistItems[i + 1]);
 			const heightBeforeTrack = this.getHeightBeforeTrackRow(trackPlaylistItems, i);
+			const currentTrackHeight = this.getHeightOfTrack(currentTrackStructure);
+			const nextTenTracksHeight = getHeightForNextTenTracks(i);
 
-			if (scrollTop > currentTrackHeight + heightBeforeTrack + 44)
+			if (scrollTop > currentTrackHeight + heightBeforeTrack + nextTenTracksHeight + 44)
 				continue;
-			else if (scrollTop + window.innerHeight < currentTrackHeight + heightBeforeTrack - nextCurrentTrackHeight)
+			else if (scrollTop + window.innerHeight < currentTrackHeight + heightBeforeTrack - nextTenTracksHeight)
 				break;
 			else
 				songsToRender.push(currentTrackStructure);
 		}
-
 
 		return {
 			scrollTop,
@@ -158,37 +289,35 @@ class PlaylistPage extends React.Component {
 		if (length <= 4)
 			length += 4 - length;
 
-		this.currentNumberOfRows = this.currentNumberOfRows + length
-
 		return length + 1;
 	}
 
-	getTrackIPlaylisttems(tracks) {
+	getTrackPlaylistItems(inputTracks) {
 		const toReturn = [];
 		let songsInCurrentAlbumRow = [];
 
+		const tracks = [...inputTracks, null]; // TODO: this is a quick hack!
+
+		// TODO: group local songs by album
+
 		!!tracks && tracks.map((track, i) => {
 			if (
-				(!!tracks[i - 1] && tracks[i - 1].track.album && tracks[i - 1].track.album.uri === tracks[i].track.album.uri)
+				(!!tracks[i - 1] && !!track && tracks[i - 1].track.album && tracks[i - 1].track.album.uri === track.track.album.uri)
 				||
-				(!songsInCurrentAlbumRow.length && (!!tracks[i + 1] && !!tracks[i + 1].track.album && tracks[i + 1].track.album.uri === tracks[i].track.album.uri))
-			)
+				(!songsInCurrentAlbumRow.length && (!!tracks[i + 1] && !!track && !!tracks[i + 1].track.album && tracks[i + 1].track.album.uri === track.track.album.uri))
+			) {
 				songsInCurrentAlbumRow.push(track);
-			else if (songsInCurrentAlbumRow.length) {
+			} else if (songsInCurrentAlbumRow.length > 0) {
 				const songsInAlbum = [...songsInCurrentAlbumRow];
 				songsInCurrentAlbumRow.length = 0;
 
-				toReturn.push({ songs: songsInAlbum, track, numberOfRows: this.getNumberOfRows(songsInAlbum), albumUri: track.track.uri });
-			} else
+				toReturn.push({ songs: songsInAlbum, track: track || songsInAlbum[0], numberOfRows: this.getNumberOfRows(songsInAlbum), albumUri: track ? track.track.uri : songsInAlbum[0].track.uri });
+			} else if (!!track)
 				toReturn.push({ songs: [track], track, numberOfRows: this.getNumberOfRows([track]), albumUri: track.track.uri });
 		});
 
 		return toReturn;
 	}
-
-	_heightCache = {};
-	_heightBeforeCache = {};
-	_allTracksCache = 0;
 
 	/**
 	 * @param {Array<?>} trackPlaylistItems
@@ -266,7 +395,7 @@ class PlaylistPage extends React.Component {
 	}
 
 	render() {
-		const { sortBy, sortOrder, currentOffset, playlistHeight, songsToRender } = this.state;
+		const { sortBy, sortOrder, currentOffset, playlistHeight, songsToRender, tracks } = this.state;
 
 		return (
 			<div
@@ -308,8 +437,8 @@ class PlaylistPage extends React.Component {
 
 				</div>
 
-
-				<button onClick={() => this.saveData(this.state.tracks, "mock-playlist.json")}>Save track data</button>
+				<button onClick={() => this.saveData(tracks, "mock-playlist.json")}>Save track data</button>
+				<button onClick={() => this.forceUpdate()}>force update</button>
 
 			</div>
 		);
