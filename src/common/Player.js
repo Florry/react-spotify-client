@@ -10,27 +10,36 @@ class Player extends React.Component {
 	/** @type {PlayerStore} */
 	playerStore = this.props.playerStore;
 
+	state = {
+		playerState: {},
+		ready: false
+	};
+
+	componentDidMount() {
+		// TODO: TEMP, this shouldn't be necessary but it works for now...
+		this.playerStore._state.observe(state => this.setState({ playerState: state.newValue }));
+		this.playerStore._ready.observe(state => this.setState({ ready: state.newValue }));
+		this.playerStore._currentPlaylist.observe(state => this.setState({ currentPlaylist: state.newValue }));
+	}
+
 	async playOrPause() {
-		const paused = typeof this.playerStore.state.paused === "undefined" || this.playerStore.state.paused;
+		const paused = typeof this.state.playerState.paused === "undefined" || this.state.playerState.paused;
 
 		if (paused)
 			await this.playerStore.play();
 		else
 			await this.playerStore.pause();
-
-
-		// TODO:!!!!!!!!
-		setTimeout(() => this.forceUpdate(), 100);
 	}
 
 	render() {
-		const ready = this.playerStore.ready;
-		const name = this.playerStore.state.name;
-		const artists = this.playerStore.state.artists || [];
-		const album = this.playerStore.state.album || { images: [] };
-		const shuffle = this.playerStore.state.shuffle;
-		const repeat_mode = this.playerStore.state.repeat_mode;
-		const paused = typeof this.playerStore.state.paused === "undefined" || this.playerStore.state.paused;
+		const ready = this.state.ready;
+		const currentPlaylist = this.state.currentPlaylist;
+		const name = this.state.playerState.name;
+		const artists = this.state.playerState.artists || [];
+		const album = this.state.playerState.album || { images: [] };
+		const shuffle = this.state.playerState.shuffle;
+		const repeatMode = this.state.playerState.repeatMode;
+		const paused = typeof this.state.playerState.paused === "undefined" || this.state.playerState.paused;
 		const artistsString = artists.map(artist => artist.name).join(",")
 
 		let biggestDimensions = 0;
@@ -44,27 +53,69 @@ class Player extends React.Component {
 		});
 
 		return (
-			<div className="player">
+			<div
+				className="player"
+			>
+				<h2 hidden={ready}>&nbsp;OFFLINE</h2>
 				<div
-					className="album-cover" style={{
+					className="album-cover"
+					style={{
 						backgroundImage: albumCover ? `url(${albumCover})` : ""
 					}}
 				/>
-				<div className="now-playing">
+				<div
+					className="now-playing"
+				>
 					<p>
 						{name}
 					</p>
-					<p>
+					<p style={{ fontSize: 10 }}>
 						{artistsString}
 					</p>
+					<p style={{ fontSize: 10, position: "absolute" }}>
+						{currentPlaylist}
+					</p>
 				</div>
-				<div className="controls">
-					<div className="controls--button-group">
-						<button onClick={() => this.forceUpdate()} id="player-button-shuffle">⮂</button>
-						<button onClick={() => this.forceUpdate()} id="player-button-previous">▕◀</button>
-						<button onClick={async () => await this.playOrPause()} id="player-button-play-pause">{paused ? "▶" : "▮▮"}</button>
-						<button onClick={() => this.forceUpdate()} id="player-button-next">▶▏</button>
-						<button onClick={() => this.forceUpdate()} id="player-button-repeat">⭯</button>
+				<div
+					className="controls"
+				>
+					<div
+						className="controls--button-group"
+					>
+						<button
+							onClick={() => this.forceUpdate()}
+							id="player-button-shuffle"
+						>
+							⮂
+						</button>
+
+						<button
+							onClick={() => this.playerStore.previousTrack()}
+							id="player-button-previous"
+						>
+							▕◀
+						</button>
+
+						<button
+							onClick={() => this.playOrPause()}
+							id="player-button-play-pause"
+						>
+							{paused ? "▶" : "▮▮"}
+						</button>
+
+						<button
+							onClick={() => this.playerStore.nextTrack()}
+							id="player-button-next"
+						>
+							▶▏
+						</button>
+
+						<button
+							onClick={() => this.forceUpdate()}
+							id="player-button-repeat"
+						>
+							⭯
+						</button>
 					</div>
 				</div>
 			</div>

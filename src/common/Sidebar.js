@@ -1,7 +1,7 @@
 import React from "react";
 import { inject, observer } from "mobx-react";
 import { Link } from "react-router-dom";
-import { PLAYLIST } from "../constants/routes";
+import { PLAYLIST, QUEUE } from "../constants/routes";
 
 /** @typedef {import("../stores/AuthStore").default} AuthStore */
 /** @typedef {import("../stores/PlaylistStore").default} PlaylistStore */
@@ -33,11 +33,9 @@ class Sidebar extends React.Component {
 			<div
 				className="sidebar"
 			>
-				{
-					!ready ? <h2>Playback OFFLINE</h2> : <span />
-				}
 				<h2>Library</h2>
 				<h2>Playlists</h2>
+				<Link to={QUEUE}><h2>Queue</h2></Link>
 				<ul>
 
 					{

@@ -3,9 +3,10 @@ import rootStore from "./stores/RootStore";
 import React from "react";
 import "./App.css";
 import LoggedInLayout from "./layout/LoggedInLayout";
+import { observer } from "mobx-react";
 
-
-export default class App extends React.Component {
+@observer
+class App extends React.Component {
 
 	componentDidMount() {
 		rootStore.stores.authStore.login();
@@ -26,3 +27,5 @@ export default class App extends React.Component {
 		);
 	}
 }
+
+export default App;

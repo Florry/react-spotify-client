@@ -36,13 +36,17 @@ const TEMP_TRACK_ROW_HEIGHT = 22;
 const IGNORE_HEIGHT_CACHE = true;
 
 /** @typedef {import("../../stores/PlaylistStore").default} PlaylistStore */
+/** @typedef {import("../../stores/PlayerStore").default} PlayerStore */
 
 @observer
-@inject("playlistStore")
+@inject("playlistStore", "playerStore")
 class PlaylistPage extends React.Component {
 
 	/** @type {PlaylistStore} */
 	playlistStore = this.props.playlistStore;
+
+	/** @type {PlayerStore} */
+	playerStore = this.props.playerStore;
 
 	state = {
 		sortBy: SORT_TYPES.CUSTOM,
@@ -72,8 +76,26 @@ class PlaylistPage extends React.Component {
 		window.addEventListener("scroll", () => this.handleScroll());
 
 		// // TODO:
-		this.playlistStore.loadTracksInPlaylist(this.state.playlistId).then(async () => {
-			const tracks = this.playlistStore.getTracksInPlaylist(this.state.playlistId);
+		if (!this.props.queue)
+			this.playlistStore.loadTracksInPlaylist(this.state.playlistId).then(async () => {
+				const tracks = this.playlistStore.getTracksInPlaylist(this.state.playlistId);
+				const originalTrackOrder = [...tracks];
+				const trackPlaylistItems = this.getTrackPlaylistItems(tracks);
+
+				await this.setState({
+					originalTrackOrder,
+					tracks,
+					trackPlaylistItems,
+					...this.getUpdatedState()
+				});
+
+				this.state.trackPlaylistItems.forEach((track, i) => this.getHeightBeforeTrackRow(this.state.trackPlaylistItems, i));
+
+				this.handleScroll();
+			});
+		else {
+			// TODO: TEMP
+			const tracks = [...this.playerStore.playQueue];
 			const originalTrackOrder = [...tracks];
 			const trackPlaylistItems = this.getTrackPlaylistItems(tracks);
 
@@ -87,7 +109,7 @@ class PlaylistPage extends React.Component {
 			this.state.trackPlaylistItems.forEach((track, i) => this.getHeightBeforeTrackRow(this.state.trackPlaylistItems, i));
 
 			this.handleScroll();
-		});
+		}
 
 		// const tracks = playlist;
 		// const trackPlaylistItems = this.getTrackPlaylistItems(tracks);
@@ -433,6 +455,7 @@ class PlaylistPage extends React.Component {
 					{
 						songsToRender.map((currentTrackStructure, i) =>
 							<AlbumTrackRow
+								playlistUri={this.state.playlistId}
 								key={currentTrackStructure.albumUri + i + "playlist"}
 								songs={currentTrackStructure.songs}
 							/>

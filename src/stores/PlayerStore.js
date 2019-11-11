@@ -1,6 +1,7 @@
 import { observable, computed, action, IObservableValue } from "mobx";
 import { PATH_PLAY_TRACK, PATH_PLAY, PATH_PAUSE } from "../constants/api-constants";
 import APIClient from "../network/APIClient";
+import Utils from "../utils/Utils";
 
 /** @typedef {import("./RootStore").default} RootStore*/
 
@@ -13,9 +14,19 @@ let Spotify;
  * @property {Function} getCurrentState
  * @property {Function} resume
  * @property {Function} pause
+ * @property {Function} nextTrack
+ * @property {Function} previousTrack
  * @property {Object} _options
  * @property {String} _options.id
  */
+
+const DEFAULT_STATE = {
+	paused: true,
+	shuffle: false,
+	repeat_mode: 0,
+	artists: [],
+	album: { images: [] }
+};
 
 export default class PlayerStore {
 
@@ -26,13 +37,16 @@ export default class PlayerStore {
 	_ready = observable.box(false);
 
 	@observable
-	_state = observable.box({
-		paused: true,
-		shuffle: false,
-		repeat_mode: 0,
-		artists: [],
-		album: { images: [] }
-	});
+	_state = observable.box(DEFAULT_STATE);
+
+	@observable
+	_currentPlaylist = observable.box(null);
+
+	@observable
+	_playQueue = observable.array();
+
+	@observable
+	_playHistory = observable.array();
 
 	/**
 	 * @param {RootStore} rootStore
@@ -63,20 +77,24 @@ export default class PlayerStore {
 		this._playerInstance.addListener("account_error", (resp) => { console.error(resp); });
 		this._playerInstance.addListener("playback_error", (resp) => { console.error(resp); });
 		this._playerInstance.addListener("player_state_changed", state => this._updatePlayerState(state));
-		this._playerInstance.addListener("ready", ({ device_id }) => this._ready = true);
-		this._playerInstance.addListener("not_ready", () => this._ready = false);
+		this._playerInstance.addListener("ready", ({ device_id }) => this._ready.set(true));
+		this._playerInstance.addListener("not_ready", () => this._ready.set(false));
 	}
 
 	@action
 	_updatePlayerState(state) {
-		this._state = {
-			paused: state.paused,
-			shuffle: state.shuffle,
-			repeat_mode: state.repeat_mode,
-			artists: state.track_window.current_track.artists,
-			album: state.track_window.current_track.album,
-			name: state.track_window.current_track.name
-		};
+		if (state === null)
+			this._state.set(DEFAULT_STATE);
+		else
+			this._state.set({
+				paused: state.paused,
+				shuffle: state.shuffle,
+				repeat_mode: state.repeat_mode,
+				artists: state.track_window.current_track.artists,
+				album: state.track_window.current_track.album,
+				name: state.track_window.current_track.name,
+				currentTrack: state.track_window.current_track
+			});
 	}
 
 	@computed
@@ -96,17 +114,61 @@ export default class PlayerStore {
 		}
 	}
 
+	@action
 	async play() {
 		await this._playerInstance.resume();
 	}
 
+	@action
 	async pause() {
 		await this._playerInstance.pause();
 	}
 
+	@action
+	nextTrack() {
+		const nextTrack = this._playQueue.shift();
+
+		if (!!nextTrack) {
+			this._playHistory.unshift(this._state.get().currentTrack);
+
+			this.playTrack(nextTrack.track ? nextTrack.track.uri : nextTrack.uri);
+		}
+	}
+
+	@action
+	previousTrack() {
+		// TODO: play track from beginning if x seconds have passed
+		const previousTrack = this._playHistory.shift();
+
+		if (!!previousTrack) {
+			this._playQueue.unshift(this._state.get().currentTrack);
+
+			this.playTrack(previousTrack.track ? previousTrack.track.uri : previousTrack.uri);
+		}
+	}
+
 	@computed
 	get ready() {
-		return this._ready.valueOf();
+		return this._ready.get();
+	}
+
+	@action
+	async setCurrentPlaylist(playlistUri, excludeTrack) {
+		this._currentPlaylist.set(playlistUri);
+
+		const { tracks: { items: tracks } } = await this.rootStore.stores.playlistStore.getPlaylist(playlistUri);
+
+		const shuffledTracks = Utils.shuffleArray(tracks);
+
+		this._playQueue.clear();
+		this._playHistory.clear();
+
+		shuffledTracks.filter(track => track.track.uri !== excludeTrack).forEach(track => this._playQueue.push(track));
+	}
+
+	@computed
+	get playQueue() {
+		return Array.from(this._playQueue.values()).map(track => track.track ? track : { track: track });
 	}
 
 }

@@ -10,11 +10,11 @@ export default class LoggedInLayout extends React.Component {
 		return (
 			<div>
 				<BrowserRouter>
+					<Player />
 					<Sidebar />
 					<>
 						<Routes />
 					</>
-					<Player />
 				</BrowserRouter>
 			</div>
 		)

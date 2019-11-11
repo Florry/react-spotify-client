@@ -31,7 +31,7 @@ class AlbumTrackRow extends React.Component {
 	}
 
 	render() {
-		const { songs: inputSongs } = this.props;
+		const { songs: inputSongs, playlistUri } = this.props;
 		const songs = [...inputSongs];
 
 		songs.sort((a, b) => {
@@ -102,7 +102,10 @@ class AlbumTrackRow extends React.Component {
 
 				rows.push(
 					<div
-						onClick={() => this.playerStore.playTrack(uri)}
+						onDoubleClick={() => {
+							this.playerStore.playTrack(uri);
+							this.playerStore.setCurrentPlaylist(playlistUri, uri);
+						}}
 						hidden={this.props.hidden}
 						title={songs[i].track.name}
 						className={`
