@@ -25,6 +25,12 @@ class Sidebar extends React.Component {
 		this.forceUpdate();
 	}
 
+	async playFromPlaylist(playlistUri) {
+		//TODO:
+		await this.playlistStore.loadTracksInPlaylist(playlistUri);
+		this.playerStore.setCurrentPlaylist(playlistUri);
+	}
+
 	render() {
 		const playlists = this.playlistStore.playlists;
 		const ready = this.playerStore.ready;
@@ -40,7 +46,7 @@ class Sidebar extends React.Component {
 
 					{
 						playlists.map((playlist, i) => <Link key={i.toString() + playlist.uri} to={PLAYLIST.replace(":playlistId", playlist.uri)}>
-							<li>{playlist.name}</li>
+							<li onDoubleClick={() => this.playFromPlaylist(playlist.uri)}>{playlist.name}</li>
 						</Link>)
 					}
 

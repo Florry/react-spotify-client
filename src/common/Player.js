@@ -1,5 +1,6 @@
 import { inject, observer } from "mobx-react";
 import React from "react";
+import Seekbar from "./Seekbar";
 
 /** @typedef {import("../stores/PlayerStore").default} PlayerStore */
 
@@ -53,72 +54,81 @@ class Player extends React.Component {
 		});
 
 		return (
-			<div
-				className="player"
-			>
-				<h2 hidden={ready}>&nbsp;OFFLINE</h2>
+			<>
 				<div
-					className="album-cover"
-					style={{
-						backgroundImage: albumCover ? `url(${albumCover})` : ""
-					}}
-				/>
-				<div
-					className="now-playing"
+					className="player"
 				>
-					<p>
-						{name}
-					</p>
-					<p style={{ fontSize: 10 }}>
-						{artistsString}
-					</p>
-					<p style={{ fontSize: 10, position: "absolute" }}>
-						{currentPlaylist}
-					</p>
-				</div>
-				<div
-					className="controls"
-				>
+					<h2 hidden={ready}>&nbsp;OFFLINE</h2>
 					<div
-						className="controls--button-group"
+						className="album-cover"
+						style={{
+							backgroundImage: albumCover ? `url(${albumCover})` : ""
+						}}
+					/>
+					<div
+						className="now-playing"
 					>
-						<button
-							onClick={() => this.forceUpdate()}
-							id="player-button-shuffle"
+						<p
+							style={{
+								opacity: name ? 1 : 0
+							}}
 						>
-							⮂
+							{name || "name"}
+						</p>
+						<p
+							style={{
+								opacity: artistsString ? 1 : 0,
+								fontSize: 10
+							}}
+						>
+							{artistsString || "artists"}
+						</p>
+					</div>
+					<div
+						className="controls"
+					>
+						<div
+							className="controls--button-group"
+						>
+							<button
+								onClick={() => this.forceUpdate()}
+								id="player-button-shuffle"
+							>
+								⮂
 						</button>
 
-						<button
-							onClick={() => this.playerStore.previousTrack()}
-							id="player-button-previous"
-						>
-							▕◀
+							<button
+								onClick={() => this.playerStore.previousTrack()}
+								id="player-button-previous"
+							>
+								▕◀
 						</button>
 
-						<button
-							onClick={() => this.playOrPause()}
-							id="player-button-play-pause"
-						>
-							{paused ? "▶" : "▮▮"}
+							<button
+								onClick={() => this.playOrPause()}
+								id="player-button-play-pause"
+							>
+								{paused ? "▶" : "▮▮"}
+							</button>
+
+							<button
+								onClick={() => this.playerStore.nextTrack()}
+								id="player-button-next"
+							>
+								▶▏
 						</button>
 
-						<button
-							onClick={() => this.playerStore.nextTrack()}
-							id="player-button-next"
-						>
-							▶▏
+							<button
+								onClick={() => this.forceUpdate()}
+								id="player-button-repeat"
+							>
+								⭯
 						</button>
-
-						<button
-							onClick={() => this.forceUpdate()}
-							id="player-button-repeat"
-						>
-							⭯
-						</button>
+						</div>
 					</div>
 				</div>
-			</div>
+				<Seekbar />
+			</>
 		);
 	}
 

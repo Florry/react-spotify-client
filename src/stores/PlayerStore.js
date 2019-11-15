@@ -16,16 +16,20 @@ let Spotify;
  * @property {Function} pause
  * @property {Function} nextTrack
  * @property {Function} previousTrack
+ * @property {Function} seek
  * @property {Object} _options
  * @property {String} _options.id
  */
 
+/** @type {?} */
 const DEFAULT_STATE = {
 	paused: true,
 	shuffle: false,
 	repeat_mode: 0,
 	artists: [],
-	album: { images: [] }
+	album: { images: [] },
+	position: 0,
+	duration: 0
 };
 
 export default class PlayerStore {
@@ -85,6 +89,8 @@ export default class PlayerStore {
 	_updatePlayerState(state) {
 		if (state === null)
 			this._state.set(DEFAULT_STATE);
+		else if (!this._state.paused && state.position !== this._state.position && state.paused && !state.position) // NOTE: This results in multiple song skips!
+			this.nextTrack();
 		else
 			this._state.set({
 				paused: state.paused,
@@ -93,13 +99,15 @@ export default class PlayerStore {
 				artists: state.track_window.current_track.artists,
 				album: state.track_window.current_track.album,
 				name: state.track_window.current_track.name,
-				currentTrack: state.track_window.current_track
+				currentTrack: state.track_window.current_track,
+				position: state.position,
+				duration: state.duration
 			});
 	}
 
 	@computed
 	get state() {
-		return this._state.valueOf();
+		return this._state.get();
 	}
 
 	@action
@@ -154,21 +162,35 @@ export default class PlayerStore {
 
 	@action
 	async setCurrentPlaylist(playlistUri, excludeTrack) {
-		this._currentPlaylist.set(playlistUri);
+		try {
+			this._currentPlaylist.set(playlistUri);
 
-		const { tracks: { items: tracks } } = await this.rootStore.stores.playlistStore.getPlaylist(playlistUri);
+			const { tracks: { items: tracks } } = await this.rootStore.stores.playlistStore.getPlaylist(playlistUri);
 
-		const shuffledTracks = Utils.shuffleArray(tracks);
+			const shuffledTracks = Utils.shuffleArray(tracks);
 
-		this._playQueue.clear();
-		this._playHistory.clear();
+			this._playQueue.clear();
+			this._playHistory.clear();
 
-		shuffledTracks.filter(track => track.track.uri !== excludeTrack).forEach(track => this._playQueue.push(track));
+			if (!excludeTrack) {
+				this.playTrack(shuffledTracks[0].track.uri);
+				shuffledTracks.shift();
+			}
+
+			shuffledTracks.filter(track => track.track.uri !== excludeTrack).forEach(track => this._playQueue.push(track));
+		} catch (err) {
+			console.error(err);
+		}
 	}
 
 	@computed
 	get playQueue() {
 		return Array.from(this._playQueue.values()).map(track => track.track ? track : { track: track });
+	}
+
+	@action
+	seekTrack(position) {
+		this._playerInstance.seek(position);
 	}
 
 }
