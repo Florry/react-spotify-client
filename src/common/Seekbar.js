@@ -26,8 +26,6 @@ class Seekbar extends React.Component {
 	seekbarInterval;
 
 	componentDidMount() {
-		this.handleOffsetLeft = this.refs.handle.offsetLeft;
-
 		// TODO: TEMP, this shouldn't be necessary but it works for now...
 		this.playerStore._state.observe(state => {
 			const newState = {};
@@ -82,7 +80,7 @@ class Seekbar extends React.Component {
 		return positionToSeekTo;
 	}
 
-	async handleOnDragStart(e) {
+	handleOnDragStart(e) {
 		e.preventDefault();
 
 		const { handleIsDragging, playing } = this.state;
@@ -106,7 +104,7 @@ class Seekbar extends React.Component {
 		const { handleIsDragging, playing } = this.state;
 
 		if ((handleIsDragging || handleIsDraggingIsForced) && playing) {
-			const newPos = e.pageX - this.handleOffsetLeft;
+			const newPos = e.pageX - this.refs.progressBar.offsetLeft;
 
 			if (newPos <= this.refs.progressBar.offsetWidth && newPos >= 0)
 				this.setState({ handlePos: newPos });
