@@ -319,6 +319,10 @@ button:focus {
 	margin-left: -6px;
 }
 
+.seekbar.inactive .handle {
+	display: none;
+}
+
 .seekbar:hover .handle:active, .seekbar.isDragging .handle {
 	background-color: red;
 }

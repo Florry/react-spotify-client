@@ -19,13 +19,14 @@ class Seekbar extends React.Component {
 		position: this.playerStore.state.position,
 		paused: true,
 		handleIsDragging: false,
-		handlePos: 0
+		handlePos: 0,
+		playing: false
 	};
 
 	seekbarInterval;
 
 	componentDidMount() {
-		this.handleOffsetLeft = this.refs.handle.offsetLeft; // TODO: this has to be dynamic after all
+		this.handleOffsetLeft = this.refs.handle.offsetLeft;
 
 		// TODO: TEMP, this shouldn't be necessary but it works for now...
 		this.playerStore._state.observe(state => {
@@ -39,6 +40,8 @@ class Seekbar extends React.Component {
 
 			this.setState({ ...newState });
 		});
+
+		this.playerStore._playing.observe(state => this.setState({ playing: state.newValue }));
 
 		this.seekbarInterval = setInterval(() => {
 			if (!this.state.paused)
@@ -82,28 +85,28 @@ class Seekbar extends React.Component {
 	async handleOnDragStart(e) {
 		e.preventDefault();
 
-		const { handleIsDragging } = this.state;
+		const { handleIsDragging, playing } = this.state;
 
-		if (!handleIsDragging) {
+		if (!handleIsDragging && playing) {
 			this.setState({ handleIsDragging: true });
 			this.handleOnDrag(e, true);
 		}
 	}
 
 	handleOnDragEnd(e) {
-		const { handleIsDragging } = this.state;
+		const { handleIsDragging, playing } = this.state;
 
-		if (handleIsDragging) {
+		if (handleIsDragging && playing) {
 			this.setState({ handleIsDragging: false });
 			this.seekTrack();
 		}
 	}
 
 	handleOnDrag(e, handleIsDraggingIsForced) {
-		const { handleIsDragging } = this.state;
+		const { handleIsDragging, playing } = this.state;
 
-		if (handleIsDragging || handleIsDraggingIsForced) {
-			const newPos = e.screenX - this.handleOffsetLeft;
+		if ((handleIsDragging || handleIsDraggingIsForced) && playing) {
+			const newPos = e.pageX - this.handleOffsetLeft;
 
 			if (newPos <= this.refs.progressBar.offsetWidth && newPos >= 0)
 				this.setState({ handlePos: newPos });
@@ -112,11 +115,11 @@ class Seekbar extends React.Component {
 
 	render() {
 		const { duration } = this.playerStore.state;
-		const { position, handleIsDragging, handlePos } = this.state;
+		const { position, handleIsDragging, playing, handlePos } = this.state;
 
 		let durationToDisplay
 
-		if (handleIsDragging)
+		if (handleIsDragging && playing)
 			durationToDisplay = Utils.duration(this.getPositionInTrackFromPositionOnSeekbar(handlePos));
 		else
 			durationToDisplay = Utils.duration(Math.max(position - 1, 0));
@@ -125,6 +128,7 @@ class Seekbar extends React.Component {
 			<div
 				ref="seekbar"
 				className={`
+					${!playing ? "inactive" : ""}
 					${handleIsDragging ? "isDragging" : ""}
 					seekbar
 				`}
@@ -147,7 +151,12 @@ class Seekbar extends React.Component {
 					>
 						<div
 							style={{
-								width: handleIsDragging ? handlePos : ((position) / (duration)) * 100 + "%"
+								width:
+									playing ?
+										handleIsDragging
+											? handlePos
+											: ((position) / (duration)) * 100 + "%"
+										: 0
 							}}
 							className="progress-bar-inner"
 						>

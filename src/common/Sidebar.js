@@ -2,6 +2,7 @@ import React from "react";
 import { inject, observer } from "mobx-react";
 import { Link } from "react-router-dom";
 import { PLAYLIST, QUEUE } from "../constants/routes";
+import Slider from "./Slider";
 
 /** @typedef {import("../stores/AuthStore").default} AuthStore */
 /** @typedef {import("../stores/PlaylistStore").default} PlaylistStore */

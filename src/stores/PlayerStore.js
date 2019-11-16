@@ -32,6 +32,8 @@ const DEFAULT_STATE = {
 	duration: 0
 };
 
+// TODO: all actions should be cancelled if run again before they are completed, e.g. changing songs quickly and only change song to the last input
+
 export default class PlayerStore {
 
 	/** @type {SpotifyPlayer} */
@@ -39,6 +41,9 @@ export default class PlayerStore {
 
 	@observable
 	_ready = observable.box(false);
+
+	@observable
+	_playing = observable.box(false);
 
 	@observable
 	_state = observable.box(DEFAULT_STATE);
@@ -87,11 +92,13 @@ export default class PlayerStore {
 
 	@action
 	_updatePlayerState(state) {
-		if (state === null)
+		if (state === null) {
+			this._playing.set(false);
 			this._state.set(DEFAULT_STATE);
-		else if (!this._state.paused && state.position !== this._state.position && state.paused && !state.position) // NOTE: This results in multiple song skips!
+		} else if (!this._state.paused && state.position !== this._state.position && state.paused && !state.position) // NOTE: This results in multiple song skips!
 			this.nextTrack();
-		else
+		else {
+			this._playing.set(true);
 			this._state.set({
 				paused: state.paused,
 				shuffle: state.shuffle,
@@ -103,11 +110,17 @@ export default class PlayerStore {
 				position: state.position,
 				duration: state.duration
 			});
+		}
 	}
 
 	@computed
 	get state() {
 		return this._state.get();
+	}
+
+	@computed
+	get playing() {
+		return this._playing.get();
 	}
 
 	@action
