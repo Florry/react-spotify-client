@@ -258,6 +258,15 @@ button:focus {
 	position: fixed;
 	bottom: 0px;
 	z-index: 500;
+	line-height: 20px;
+	height: 30px;
+	width: 100%;
+}
+
+.slider {
+	color: #fff;
+	bottom: 0px;
+	z-index: 500;
 	display: flex;
 	flex-direction: row;
 	flex-wrap: nowrap;
@@ -267,8 +276,44 @@ button:focus {
 	height: 30px;
 	padding-right: 20px;
 	padding-left: 20px;
-	width: calc(100% - 40px);
-	max-width: calc(100% - 40px);
+}
+
+.slider .progress-bar-inner {
+	border-radius: 2px;
+	background: #b3b3b3;
+	height: 100%;
+}
+
+.slider:hover .progress-bar-inner, .slider.isDragging .progress-bar-inner {
+	background: #1ed760;
+}
+
+.slider:hover .handle, .slider.isDragging .handle {
+	width: 12px;
+	height: 12px;
+	top: -4px;
+	left: -4px;
+	background-color: #fff;
+	border-radius: 12px;
+	position: relative;
+	left: 100%;
+	margin-left: -6px;
+}
+
+.slider.inactive .handle {
+	display: none;
+}
+
+.slider:hover .handle:active, .slider.isDragging .handle {
+	background-color: red;
+}
+
+.slider .max {
+	order: 2;
+}
+
+.slider .value {
+	order: 0;
 }
 
 .progress-bar-wrapper {
@@ -289,40 +334,8 @@ button:focus {
 	height: 5px;
 }
 
-.duration {
-	order: 2;
-}
-
-.position {
-	order: 0;
-}
-
 .progress-bar-inner {
 	border-radius: 2px;
 	background: #b3b3b3;
 	height: 100%;
-}
-
-.seekbar:hover .progress-bar-inner, .seekbar.isDragging .progress-bar-inner {
-	background: #1ed760;
-}
-
-.seekbar:hover .handle, .seekbar.isDragging .handle {
-	width: 12px;
-	height: 12px;
-	top: -4px;
-	left: -4px;
-	background-color: #fff;
-	border-radius: 12px;
-	position: relative;
-	left: 100%;
-	margin-left: -6px;
-}
-
-.seekbar.inactive .handle {
-	display: none;
-}
-
-.seekbar:hover .handle:active, .seekbar.isDragging .handle {
-	background-color: red;
 }

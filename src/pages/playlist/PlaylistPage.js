@@ -1,6 +1,8 @@
 import React from "react";
 import AlbumTrackRow from "../../common/AlbumTrackRow";
 import { inject, observer } from "mobx-react";
+import Slider from "../../common/Slider";
+import Utils from "../../utils/Utils";
 
 // // @ts-ignore
 // const playlist = require("../../json/spotifyPlaylistSongs.json");
@@ -61,11 +63,15 @@ class PlaylistPage extends React.Component {
 		trackPlaylistItems: [], // only save uris
 		songsToRender: [],
 		firstTime: true,
-		playlistHeight: 0
-
+		playlistHeight: 0,
+		sliderPos: 0
 		// tracks: playlist,
 		// trackPlaylistItems: this.getTrackIPlaylisttems(playlist)
 	};
+
+	onDragComplete(newPos) {
+		this.setState({ sliderPos: newPos });
+	}
 
 	_nextTenHeightCache = {};
 	_heightCache = {};
@@ -463,6 +469,13 @@ class PlaylistPage extends React.Component {
 					}
 				</div>
 
+				<Slider
+					valueDecorator={Utils.duration}
+					maxDecorator={Utils.duration}
+					max={600000}
+					value={this.state.sliderPos}
+					onDragComplete={newPos => this.onDragComplete(newPos)}
+				/>
 				<button onClick={() => this.saveData(tracks, "mock-playlist.json")}>Save track data</button>
 				<button onClick={() => this.forceUpdate()}>force update</button>
 

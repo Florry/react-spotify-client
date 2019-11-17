@@ -1,6 +1,7 @@
 import React from "react";
 import Utils from "../utils/Utils";
 import { inject, observer } from "mobx-react";
+import Slider from "./Slider";
 
 /** @typedef {import("../stores/PlayerStore").default} PlayerStore */
 
@@ -18,8 +19,6 @@ class Seekbar extends React.Component {
 	state = {
 		position: this.playerStore.state.position,
 		paused: true,
-		handleIsDragging: false,
-		handlePos: 0,
 		playing: false
 	};
 
@@ -45,137 +44,34 @@ class Seekbar extends React.Component {
 			if (!this.state.paused)
 				this.setState({ position: this.state.position + SEEKBAR_UPDATE_RATE });
 		}, SEEKBAR_UPDATE_RATE);
-
-		document.addEventListener("mousemove", (e) => this.handleOnDrag(e));
-		document.addEventListener("mouseup", (e) => this.handleOnDragEnd(e));
 	}
 
 	componentWillUnmount() {
 		clearInterval(this.seekbarInterval);
-
-		document.removeEventListener("mousemove", (e) => this.handleOnDrag(e));
-		document.removeEventListener("mouseup", (e) => this.handleOnDragEnd(e));
 	}
 
-	seekTrack(e) {
-		if (!!e) {
-			e.stopPropagation();
-			e.preventDefault();
-		}
-
-		const positionToSeekTo = this.getPositionInTrackFromPositionOnSeekbar((e ? e.nativeEvent.pageX - this.refs.progressBar.offsetLeft : this.state.handlePos));
-
+	seekTrack(positionToSeekTo) {
 		this.playerStore.seekTrack(positionToSeekTo);
-
 		this.setState({ position: positionToSeekTo });
-	}
-
-	getPositionInTrackFromPositionOnSeekbar(pos) {
-		const duration = this.playerStore.state.duration;
-		const widthOfElement = this.refs.progressBar.offsetWidth;
-		const positionOnSeekbar = pos;
-		const percentage = 100 - ((widthOfElement - positionOnSeekbar) / widthOfElement) * 100;
-		const positionToSeekTo = duration * (percentage / 100);
-
-		return positionToSeekTo;
-	}
-
-	handleOnDragStart(e) {
-		e.preventDefault();
-
-		const { handleIsDragging, playing } = this.state;
-
-		if (!handleIsDragging && playing) {
-			this.setState({ handleIsDragging: true });
-			this.handleOnDrag(e, true);
-		}
-	}
-
-	handleOnDragEnd(e) {
-		const { handleIsDragging, playing } = this.state;
-
-		if (handleIsDragging && playing) {
-			this.setState({ handleIsDragging: false });
-			this.seekTrack();
-		}
-	}
-
-	handleOnDrag(e, handleIsDraggingIsForced) {
-		const { handleIsDragging, playing } = this.state;
-
-		if ((handleIsDragging || handleIsDraggingIsForced) && playing) {
-			const newPos = e.pageX - this.refs.progressBar.offsetLeft;
-
-			if (newPos <= this.refs.progressBar.offsetWidth && newPos >= 0)
-				this.setState({ handlePos: newPos });
-		}
 	}
 
 	render() {
 		const { duration } = this.playerStore.state;
-		const { position, handleIsDragging, playing, handlePos } = this.state;
-
-		let durationToDisplay
-
-		if (handleIsDragging && playing)
-			durationToDisplay = Utils.duration(this.getPositionInTrackFromPositionOnSeekbar(handlePos));
-		else
-			durationToDisplay = Utils.duration(Math.max(position - 1, 0));
+		const { position, playing } = this.state;
 
 		return (
 			<div
-				ref="seekbar"
-				className={`
-					${!playing ? "inactive" : ""}
-					${handleIsDragging ? "isDragging" : ""}
-					seekbar
-				`}
-				onClick={(e) => this.seekTrack(e)}
-				onMouseDown={e => this.handleOnDragStart(e)}
+				className="seekbar"
 			>
-				<img ref="dragImg" hidden />
-				<span
-					className="position"
-				>
-					{durationToDisplay}
-				</span>
-
-				<div
-					className="progress-bar-wrapper"
-				>
-					<div
-						className="progress-bar"
-						ref="progressBar"
-					>
-						<div
-							style={{
-								width:
-									playing ?
-										handleIsDragging
-											? handlePos
-											: ((position) / (duration)) * 100 + "%"
-										: 0
-							}}
-							className="progress-bar-inner"
-						>
-							<div
-								draggable
-								onDragStart={e => this.handleOnDragStart(e)}
-								style={{
-									left: handleIsDragging ? handlePos : ""
-								}}
-								ref="handle"
-								className="handle"
-							/>
-						</div>
-					</div>
-				</div>
-
-				<span
-					className="duration"
-				>
-					{Utils.duration(duration)}
-				</span>
+				<Slider
+					disabled={!playing}
+					value={playing ? Math.max(position - 1, 0) : 0}
+					valueDecorator={Utils.duration}
+					min={0}
+					max={duration}
+					maxDecorator={Utils.duration}
+					onDragComplete={newPos => this.seekTrack(newPos)}
+				/>
 			</div>
 		);
 	}

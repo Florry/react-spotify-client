@@ -32,14 +32,27 @@ class Sidebar extends React.Component {
 		this.playerStore.setCurrentPlaylist(playlistUri);
 	}
 
+	state = {
+		sliderPos: 150
+	};
+
+	onDragComplete(newPos) {
+		this.setState({ sliderPos: newPos });
+	}
+
 	render() {
 		const playlists = this.playlistStore.playlists;
-		const ready = this.playerStore.ready;
 
 		return (
 			<div
 				className="sidebar"
 			>
+				<Slider
+					min={100}
+					max={200}
+					value={this.state.sliderPos}
+					onDragComplete={newPos => this.onDragComplete(newPos)}
+				/>
 				<h2>Library</h2>
 				<h2>Playlists</h2>
 				<Link to={QUEUE}><h2>Queue</h2></Link>
