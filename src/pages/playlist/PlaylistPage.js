@@ -1,6 +1,7 @@
 import { inject, observer } from "mobx-react";
 import AlbumTrackRow from "../../common/AlbumTrackRow";
 import React from "react";
+import uuid from "uuid";
 
 // TODO: move a lot of this code into components!
 
@@ -324,6 +325,8 @@ class PlaylistPage extends React.Component {
 		// TODO: group local songs by album
 
 		!!tracks && tracks.map((track, i) => {
+			const id = uuid.v4();
+
 			if (
 				(!!tracks[i - 1] && !!track && tracks[i - 1].track.album && tracks[i - 1].track.album.uri === track.track.album.uri)
 				||
@@ -334,9 +337,9 @@ class PlaylistPage extends React.Component {
 				const songsInAlbum = [...songsInCurrentAlbumRow];
 				songsInCurrentAlbumRow.length = 0;
 
-				toReturn.push({ songs: songsInAlbum, track: track || songsInAlbum[0], numberOfRows: this.getNumberOfRows(songsInAlbum), albumUri: track ? track.track.uri : songsInAlbum[0].track.uri });
+				toReturn.push({ id, songs: songsInAlbum, track: track || songsInAlbum[0], numberOfRows: this.getNumberOfRows(songsInAlbum), albumUri: track ? track.track.uri : songsInAlbum[0].track.uri });
 			} else if (!!track)
-				toReturn.push({ songs: [track], track, numberOfRows: this.getNumberOfRows([track]), albumUri: track.track.uri });
+				toReturn.push({ id, songs: [track], track, numberOfRows: this.getNumberOfRows([track]), albumUri: track.track.uri });
 		});
 
 		return toReturn;
@@ -457,7 +460,7 @@ class PlaylistPage extends React.Component {
 						songsToRender.map((currentTrackStructure, i) =>
 							<AlbumTrackRow
 								playlistUri={this.state.playlistId}
-								key={currentTrackStructure.albumUri + "playlist"}
+								key={currentTrackStructure.id + "playlist"}
 								songs={currentTrackStructure.songs}
 							/>
 						)

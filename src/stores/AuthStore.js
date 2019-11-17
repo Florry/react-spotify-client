@@ -15,6 +15,9 @@ export default class AuthStore {
 	@observable
 	_accessToken = null;
 
+	@observable
+	_displayName = observable.box("counterwille"); // TODO: make dynamic!
+
 	@action
 	login() {
 		this._getPersistedAccessToken();
@@ -50,6 +53,11 @@ export default class AuthStore {
 			this._getPersistedAccessToken();
 
 		return this._accessToken;
+	}
+
+	@computed
+	get displayName() {
+		return this._displayName.get();
 	}
 
 }

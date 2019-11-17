@@ -2,6 +2,8 @@ import { API_ROOT, PATH_LOGGED_IN_USER_PLAYLISTS, PATH_GET_PLAYLIST_BY_ID } from
 import { observable, computed, action } from "mobx";
 import APIClient from "../network/APIClient";
 
+import promiseLimit from "promise-limit";
+
 /** @typedef {import("./RootStore").default} RootStore*/
 
 // TODO: investigate https://spclient.wg.spotify.com/playlist/v2/user/counterwille/rootlist?decorate=revision%2Clength%2Cattributes%2Ctimestamp%2Cowner&market=from_token
@@ -39,9 +41,12 @@ export default class PlaylistStore {
 			if (!next && response.total > response.offset && response.next !== null) {
 				const promises = [];
 				const timesToFetch = Math.ceil(response.total / LIMIT);
+				const limit = promiseLimit(10);
 
 				for (let i = 0; i < timesToFetch; i++)
-					await this.loadPlaylistsForLoggedInUser(this._getNextString(response.next).replace(`offset=${LIMIT}`, "offset=" + ((i + 1) * LIMIT)));
+					promises.push(limit(() => this.loadPlaylistsForLoggedInUser(this._getNextString(response.next).replace(`offset=${LIMIT}`, "offset=" + ((i + 1) * LIMIT)))));
+
+				await Promise.all(promises);
 			}
 		} catch (err) {
 			// console.error(err);
@@ -107,9 +112,12 @@ export default class PlaylistStore {
 			if (!next && response.total > response.offset && response.next !== null) {
 				const promises = [];
 				const timesToFetch = Math.ceil(response.total / LIMIT);
+				const limit = promiseLimit(10);
 
 				for (let i = 0; i < timesToFetch; i++)
-					await this.loadTracksInPlaylist(playlistUri, this._getNextString(response.next).replace(`offset=${LIMIT}`, "offset=" + ((i + 1) * LIMIT)));
+					promises.push(limit(() => this.loadTracksInPlaylist(playlistUri, this._getNextString(response.next).replace(`offset=${LIMIT}`, "offset=" + ((i + 1) * LIMIT)))));
+
+				await Promise.all(promises);
 			}
 		} catch (err) {
 			console.error(err);

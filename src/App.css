@@ -208,7 +208,7 @@ td:hover {
 }
 
 .album-cover {
-	background-image: url(https://i.scdn.co/image/ab67616d00004851f1ab528856e0918a108d49fc);
+	background-image: url("/images/no-cover-art.png");
 	background-size: 400px 400px;
 	width: 400px;
 	height: 400px;
@@ -253,11 +253,164 @@ button:focus {
 	top: 0;
 	left: 0;
 	position: fixed;
-	height: calc(100% - 548px);
+	height: calc(100% - 524px);
 	max-height: 100%;
 	overflow-y: scroll;
-	width: 400px;
+	width: 364px;
 	z-index: 400;
+	padding-left: 18px;
+	padding-right: 18px;
+}
+
+.sidebar ul {
+	display: inline !important;
+}
+
+.sidebar h2 {
+	box-sizing: border-box;
+	color: rgb(179, 179, 179);
+	cursor: default;
+	display: block;
+	font-family: spotify-circular, spotify-circular-cyrillic, spotify-circular-arabic, spotify-circular-hebrew, "Helvetica Neue", Helvetica, Arial, "Hiragino Kaku Gothic Pro", Meiryo, "MS Gothic", sans-serif;
+	font-size: 11px;
+	font-weight: 400;
+	height: 15.3362px;
+	letter-spacing: 1.76px;
+	line-height: 16px;
+	text-size-adjust: 100%;
+	text-transform: uppercase;
+	user-select: none;
+	width: 336.661px;
+	-webkit-font-smoothing: antialiased;
+	-webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+	margin-bottom: 0;
+}
+
+.sidebar h2:before {
+	font-family: FontAwesome;
+	font-weight: normal;
+	font-style: normal;
+	display: inline-block;
+	text-decoration: inherit;
+	/* content: ""; */
+	position: relative;
+	margin-right: 10px;
+	width: 10px;
+	height: 10px;
+}
+
+.sidebar h2#home:before {
+	content: "";
+}
+
+.sidebar h2#explore:before {
+	content: "\f8d9";
+}
+
+.sidebar h2#radio:before {
+	content: "";
+}
+
+.sidebar h2#queue:before {
+	content: "";
+}
+
+.sidebar h2 a, .sidebar h2 a:visited {
+	color: rgb(179, 179, 179);
+	text-decoration: none;
+}
+
+[class^="icon-"]:before, [class*=" icon-"]:before {
+	font-family: FontAwesome;
+	font-weight: normal;
+	font-style: normal;
+	display: inline-block;
+	text-decoration: inherit;
+}
+
+.sidebar-playlist-item:hover, .sidebar-playlist-item:hover a, .sidebar-playlist-item:hover a .playlist-owner {
+	color: #fff;
+}
+
+.sidebar-playlist-item:before {
+	font-family: FontAwesome;
+	font-weight: normal;
+	font-style: normal;
+	display: inline-block;
+	text-decoration: inherit;
+	content: "";
+	top: 2.5px;
+	position: relative;
+	margin-right: 10px;
+	width: 10px;
+	height: 10px;
+}
+
+.sidebar-playlist-item#for-you:before {
+	content: "";
+	top: 1.5px;
+}
+
+.sidebar-playlist-item#recently-played:before {
+	content: "";
+	top: 1.5px;
+}
+
+.sidebar-playlist-item#albums:before {
+	content: "";
+	top: 1.5px;
+}
+
+.sidebar-playlist-item#artists:before {
+	content: "";
+	top: 1.5px;
+}
+
+.sidebar-playlist-item#local-files:before {
+	content: "";
+	top: 1.5px;
+}
+
+.sidebar-playlist-item#podcasts:before {
+	content: "";
+	top: 1.5px;
+}
+
+.sidebar-playlist-item#starred:before {
+	content: "\f005";
+	color: #d8ba58;
+	top: 1.5px;
+}
+
+.playlist-owner {
+	color: rgb(99, 99, 99);
+	display: block;
+}
+
+.sidebar-playlist-item {
+	text-decoration: none;
+	color: rgb(179, 179, 179);
+	cursor: default;
+	display: flex;
+	text-align: left;
+	text-size-adjust: 100%;
+	user-select: none;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+	letter-spacing: 0.21px;
+	line-height: 12.5x;
+	overflow: hidden;
+	text-align: left;
+	text-overflow: ellipsis;
+	text-size-adjust: 100%;
+	text-transform: none;
+	user-select: none;
+	width: 100%;
+	height: auto;
+	margin-bottom: 10px;
+}
+
+.sidebar-playlist-item a {
+	text-decoration: none;
 }
 
 .volume-control-mute:hover {
