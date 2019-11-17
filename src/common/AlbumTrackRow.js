@@ -1,6 +1,6 @@
+import { inject } from "mobx-react";
 import React from "react";
 import Utils from "../utils/Utils";
-import { inject } from "mobx-react";
 
 // @ts-ignore
 const starredSongs = require("../json/spotifyStarred.json");
@@ -133,7 +133,7 @@ class AlbumTrackRow extends React.Component {
 						<div
 							className="td td-starred"
 						>
-							{isStarred ? <span className="filled">★</span> : "☆"}
+							{isStarred ? <span className="filled"><i className="fas fa-star" /></span> : <i className="far fa-star" />}
 						</div>
 						<div
 							className="td td-number"

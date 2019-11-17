@@ -1,5 +1,5 @@
-import React from "react";
 import Utils from "../utils/Utils";
+import React from "react";
 
 export default class TrackRow extends React.Component {
 

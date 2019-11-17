@@ -1,5 +1,5 @@
 import { observable, computed, action, IObservableValue } from "mobx";
-import { PATH_PLAY_TRACK, PATH_PLAY, PATH_PAUSE } from "../constants/api-constants";
+import { PATH_PLAY_TRACK } from "../constants/api-constants";
 import APIClient from "../network/APIClient";
 import Utils from "../utils/Utils";
 
@@ -17,6 +17,8 @@ let Spotify;
  * @property {Function} nextTrack
  * @property {Function} previousTrack
  * @property {Function} seek
+ * @property {Function} setVolume
+ * @property {Function} getVolume
  * @property {Object} _options
  * @property {String} _options.id
  */
@@ -92,6 +94,7 @@ export default class PlayerStore {
 
 	@action
 	_updatePlayerState(state) {
+		console.log(state);
 		if (state === null) {
 			this._playing.set(false);
 			this._state.set(DEFAULT_STATE);
@@ -102,7 +105,7 @@ export default class PlayerStore {
 			this._state.set({
 				paused: state.paused,
 				shuffle: state.shuffle,
-				repeat_mode: state.repeat_mode,
+				repeatMode: state.repeat_mode,
 				artists: state.track_window.current_track.artists,
 				album: state.track_window.current_track.album,
 				name: state.track_window.current_track.name,
@@ -204,6 +207,16 @@ export default class PlayerStore {
 	@action
 	seekTrack(position) {
 		this._playerInstance.seek(position);
+	}
+
+	@action
+	setVolume(volume) {
+		this._playerInstance.setVolume(volume);
+	}
+
+	@action
+	getVolume(volume) {
+		return this._playerInstance.getVolume();
 	}
 
 }

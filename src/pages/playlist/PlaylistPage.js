@@ -1,8 +1,8 @@
-import React from "react";
-import AlbumTrackRow from "../../common/AlbumTrackRow";
 import { inject, observer } from "mobx-react";
-import Slider from "../../common/Slider";
-import Utils from "../../utils/Utils";
+import AlbumTrackRow from "../../common/AlbumTrackRow";
+import React from "react";
+
+// TODO: move a lot of this code into components!
 
 // // @ts-ignore
 // const playlist = require("../../json/spotifyPlaylistSongs.json");

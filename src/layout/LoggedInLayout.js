@@ -1,8 +1,8 @@
-import React from "react";
-import Routes from "../Routes";
-import Sidebar from "../common/Sidebar";
 import { BrowserRouter } from "react-router-dom";
+import Sidebar from "../common/Sidebar";
+import Routes from "../Routes";
 import Player from "../common/Player";
+import React from "react";
 
 export default class LoggedInLayout extends React.Component {
 

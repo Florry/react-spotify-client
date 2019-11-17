@@ -129,7 +129,7 @@ td:hover {
 }
 
 .td-starred {
-	font-size: 15px;
+	font-size: 10px;
 	width: 36px;
 }
 
@@ -195,7 +195,7 @@ td:hover {
 .player {
 	color: white;
 	position: fixed;
-	bottom: 0px;
+	bottom: -25px;
 	width: 400px;
 	height: 548px;
 	background-color: #282828;
@@ -224,11 +224,19 @@ td:hover {
 .controls--button-group button {
 	border: none;
 	background: none;
+	color: rgb(206, 206, 206);
+}
+
+.controls--button-group button:hover {
 	color: #fff;
 }
 
 .controls--button-group button:active {
 	color: red;
+}
+
+.controls--button-group .inactive {
+	opacity: 0.5;
 }
 
 button:focus {
@@ -252,6 +260,14 @@ button:focus {
 	z-index: 400;
 }
 
+.volume-control-mute:hover {
+	color: #fff;
+}
+
+.volume-control-mute {
+	z-index: 500000;
+}
+
 .seekbar {
 	background-color: #282828;
 	color: #fff;
@@ -260,11 +276,12 @@ button:focus {
 	z-index: 500;
 	line-height: 20px;
 	height: 30px;
-	width: 100%;
+	width: calc(100% - 400px);
+	left: 400px;
 }
 
 .slider {
-	color: #fff;
+	color: rgb(206, 206, 206);
 	bottom: 0px;
 	z-index: 500;
 	display: flex;

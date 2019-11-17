@@ -1,7 +1,7 @@
 import { createContext } from "react";
-import AuthStore from "./AuthStore";
 import PlaylistStore from "./PlaylistStore";
 import PlayerStore from "./PlayerStore";
+import AuthStore from "./AuthStore";
 
 class RootStore {
 

@@ -1,7 +1,7 @@
-import React from "react";
-import { inject } from "mobx-react";
-import { Redirect } from "react-router-dom";
 import { PLAYLIST } from "../../constants/routes";
+import { Redirect } from "react-router-dom";
+import { inject } from "mobx-react";
+import React from "react";
 
 /** @typedef {import("../../stores/AuthStore").default} AuthStore */
 

@@ -1,9 +1,9 @@
+import LoggedInLayout from "./layout/LoggedInLayout";
+import { observer } from "mobx-react";
 import { Provider } from "mobx-react";
 import rootStore from "./stores/RootStore";
 import React from "react";
 import "./App.css";
-import LoggedInLayout from "./layout/LoggedInLayout";
-import { observer } from "mobx-react";
 
 @observer
 class App extends React.Component {

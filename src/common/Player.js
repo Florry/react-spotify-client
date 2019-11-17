@@ -1,6 +1,8 @@
 import { inject, observer } from "mobx-react";
-import React from "react";
+import VolumeControl from "./VolumeControl";
 import Seekbar from "./Seekbar";
+import React from "react";
+import { NO_REPEAT, REPEAT, REPEAT_ONCE } from "../constants/player-constants";
 
 /** @typedef {import("../stores/PlayerStore").default} PlayerStore */
 
@@ -33,14 +35,9 @@ class Player extends React.Component {
 	}
 
 	render() {
+		const { name, artists = [], album = { images: [] }, shuffle = false, repeatMode = 0, paused: statePaused } = this.state.playerState;
+		const paused = typeof statePaused === "undefined" || statePaused;
 		const ready = this.state.ready;
-		const currentPlaylist = this.state.currentPlaylist;
-		const name = this.state.playerState.name;
-		const artists = this.state.playerState.artists || [];
-		const album = this.state.playerState.album || { images: [] };
-		const shuffle = this.state.playerState.shuffle;
-		const repeatMode = this.state.playerState.repeatMode;
-		const paused = typeof this.state.playerState.paused === "undefined" || this.state.playerState.paused;
 		const artistsString = artists.map(artist => artist.name).join(",")
 
 		let biggestDimensions = 0;
@@ -58,13 +55,19 @@ class Player extends React.Component {
 				<div
 					className="player"
 				>
-					<h2 hidden={ready}>&nbsp;OFFLINE</h2>
+					<h2
+						hidden={ready}
+						style={{ position: "absolute" }}
+					>
+						&nbsp;OFFLINE
+						</h2>
 					<div
 						className="album-cover"
 						style={{
-							backgroundImage: albumCover ? `url(${albumCover})` : ""
+							backgroundImage: albumCover && `url(${albumCover})`
 						}}
 					/>
+
 					<div
 						className="now-playing"
 					>
@@ -87,43 +90,47 @@ class Player extends React.Component {
 					<div
 						className="controls"
 					>
+						<VolumeControl />
 						<div
 							className="controls--button-group"
 						>
 							<button
 								onClick={() => this.forceUpdate()}
 								id="player-button-shuffle"
+								className={!shuffle ? "inactive" : ""}
 							>
-								⮂
-						</button>
+								<i className="fas fa-random" />
+							</button>
 
 							<button
 								onClick={() => this.playerStore.previousTrack()}
 								id="player-button-previous"
 							>
-								▕◀
-						</button>
+								<i className="fas fa-step-backward" />
+							</button>
 
 							<button
 								onClick={() => this.playOrPause()}
 								id="player-button-play-pause"
 							>
-								{paused ? "▶" : "▮▮"}
+								{paused ? <i className="fas fa-play" /> : <i className="fas fa-pause" />}
 							</button>
 
 							<button
 								onClick={() => this.playerStore.nextTrack()}
 								id="player-button-next"
 							>
-								▶▏
-						</button>
+								<i className="fas fa-step-forward" />
+							</button>
 
 							<button
 								onClick={() => this.forceUpdate()}
 								id="player-button-repeat"
+								className={repeatMode === NO_REPEAT ? "inactive" : ""}
 							>
-								⭯
-						</button>
+								{(repeatMode === REPEAT || repeatMode === NO_REPEAT) && <i className="fas fa-redo" />}
+								{repeatMode === REPEAT_ONCE && (<><i className="fas fa-redo" />1</>)}
+							</button>
 						</div>
 					</div>
 				</div>

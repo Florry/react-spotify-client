@@ -1,7 +1,7 @@
-import React from "react";
-import Utils from "../utils/Utils";
 import { inject, observer } from "mobx-react";
 import Slider from "./Slider";
+import React from "react";
+import Utils from "../utils/Utils";
 
 /** @typedef {import("../stores/PlayerStore").default} PlayerStore */
 

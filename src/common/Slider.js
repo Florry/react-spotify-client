@@ -1,7 +1,9 @@
-import React from "react";
 import PropTypes from "prop-types";
+import React from "react";
 
 export default class Slider extends React.Component {
+
+	// TODO: add option to send result everytime the value is changed
 
 	static propTypes = {
 		disabled: PropTypes.bool,
@@ -10,7 +12,8 @@ export default class Slider extends React.Component {
 		value: PropTypes.number,
 		valueDecorator: PropTypes.func,
 		maxDecorator: PropTypes.func,
-		onDragComplete: PropTypes.func
+		onDragComplete: PropTypes.func,
+		setValueOnDrag: PropTypes.bool
 	};
 
 	static defaultProps = {
@@ -66,15 +69,21 @@ export default class Slider extends React.Component {
 	}
 
 	handleOnDrag(e, isDraggingIsForced) {
-		const { max, min, disabled } = this.props;
+		const { max, min, disabled, onDragComplete, setValueOnDrag } = this.props;
 		const { isDragging } = this.state;
 
 		if (!disabled && (isDragging || isDraggingIsForced)) {
 			const newPos = (e.pageX - (this.refs.progressBar.offsetLeft + this.refs.progressBar.offsetParent.offsetLeft));
 			const currentValue = ((newPos / this.refs.progressBar.offsetWidth) * (max - min) + min).toFixed(0);
 
-			if (newPos <= this.refs.progressBar.offsetWidth && newPos >= 0)
+			//TODO: clamp values to min / max without triggering volume changes on clicking somewhere else (e.g. the mute button)
+
+			if (newPos <= this.refs.progressBar.offsetWidth && newPos >= 0) {
 				this.setState({ handlePos: newPos, currentValue });
+
+				if (setValueOnDrag && onDragComplete)
+					onDragComplete(Number.parseInt(currentValue));
+			}
 		}
 	}
 

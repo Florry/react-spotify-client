@@ -1,8 +1,7 @@
-import React from "react";
+import { PLAYLIST, QUEUE } from "../constants/routes";
 import { inject, observer } from "mobx-react";
 import { Link } from "react-router-dom";
-import { PLAYLIST, QUEUE } from "../constants/routes";
-import Slider from "./Slider";
+import React from "react";
 
 /** @typedef {import("../stores/AuthStore").default} AuthStore */
 /** @typedef {import("../stores/PlaylistStore").default} PlaylistStore */
