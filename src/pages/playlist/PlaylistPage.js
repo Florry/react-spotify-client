@@ -457,7 +457,7 @@ class PlaylistPage extends React.Component {
 						songsToRender.map((currentTrackStructure, i) =>
 							<AlbumTrackRow
 								playlistUri={this.state.playlistId}
-								key={currentTrackStructure.albumUri + i + "playlist"}
+								key={currentTrackStructure.albumUri + "playlist"}
 								songs={currentTrackStructure.songs}
 							/>
 						)
