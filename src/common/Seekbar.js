@@ -40,9 +40,15 @@ class Seekbar extends React.Component {
 
 		this.playerStore._playing.observe(state => this.setState({ playing: state.newValue }));
 
-		this.seekbarInterval = setInterval(() => {
-			if (!this.state.paused)
-				this.setState({ position: this.state.position + SEEKBAR_UPDATE_RATE });
+		this.seekbarInterval = setInterval(async () => {
+			if (!this.state.paused) {
+				await this.setState({ position: this.state.position + SEEKBAR_UPDATE_RATE });
+
+				if (this.state.position >= this.playerStore.state.duration) {
+					this.playerStore.nextTrack();
+					this.setState({ position: 0 });
+				}
+			}
 		}, SEEKBAR_UPDATE_RATE);
 	}
 

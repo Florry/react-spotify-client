@@ -1,4 +1,4 @@
-import { PLAYLIST, QUEUE, SPOTIFY_API_CALLBACK } from "./constants/routes";
+import { PLAYLIST, QUEUE, SPOTIFY_API_CALLBACK, PLAYLIST_REDIRECT } from "./constants/routes";
 import { Route, Switch, Redirect } from "react-router-dom";
 import GetAuthToken from "./common/auth/GetAuthToken";
 import PlaylistPage from "./pages/playlist/PlaylistPage";
@@ -16,6 +16,9 @@ export default () => {
 
 			<Route path={PLAYLIST} component={props => <PlaylistPage {...props} />} exact />
 			<Route path={QUEUE} component={props => <PlaylistPage {...props} queue={true} />} exact />
+
+			{/* TODO: THIS IS A QUICK HACK!!*/}
+			<Route path={PLAYLIST_REDIRECT} render={props => (<Redirect to={`/playlist/${props.match.params.playlistId}`} />)} exact />
 
 			<Route exact path="/" render={() => (<Redirect to="/playlist/spotify:playlist:4HFv8kVXrc7JLEg21RJhxt" />)} />
 

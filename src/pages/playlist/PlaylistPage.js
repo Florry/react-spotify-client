@@ -64,9 +64,10 @@ class PlaylistPage extends React.Component {
 		trackPlaylistItems: [], // only save uris
 		songsToRender: [],
 		firstTime: true,
-		playlistHeight: 0
+		playlistHeight: 0,
 		// tracks: playlist,
 		// trackPlaylistItems: this.getTrackIPlaylisttems(playlist)
+		isDragging: false
 	};
 
 	_nextTenHeightCache = {};
@@ -113,6 +114,8 @@ class PlaylistPage extends React.Component {
 			this.handleScroll();
 		}
 
+		this.playlistStore._isDragging.observe(change => this.setState({ isDragging: change.newValue }));
+
 		// const tracks = playlist;
 		// const trackPlaylistItems = this.getTrackPlaylistItems(tracks);
 		// const originalTrackOrder = [...tracks];
@@ -155,9 +158,12 @@ class PlaylistPage extends React.Component {
 			}
 			case SORT_TYPES.TITLE: {
 				sortedTracks.sort((a, b) => {
-					if (a.track.name > b.track.name)
+					const aTrackName = a.track.name.toLowerCase().split("'").join("").replace(/[^a-zA-Z0-9]/g, '').split("(").join("").split(")").join("");
+					const bTrackName = b.track.name.toLowerCase().split("'").join("").replace(/[^a-zA-Z0-9]/g, '').split("(").join("").split(")").join("");
+
+					if (aTrackName > bTrackName)
 						return 1 * sortOrder;
-					else if (a.track.name < b.track.name)
+					else if (aTrackName < bTrackName)
 						return -1 * sortOrder;
 					else
 						return 0;
@@ -421,10 +427,11 @@ class PlaylistPage extends React.Component {
 	}
 
 	render() {
-		const { sortBy, sortOrder, currentOffset, playlistHeight, songsToRender, tracks } = this.state;
+		const { sortBy, sortOrder, currentOffset, playlistHeight, songsToRender, tracks, isDragging } = this.state;
 
 		return (
 			<div
+				className={`playlist ${isDragging ? "isDragging" : ""}`}
 				style={{
 					width: 1582,
 					position: "relative",
@@ -466,10 +473,6 @@ class PlaylistPage extends React.Component {
 						)
 					}
 				</div>
-
-				<button onClick={() => this.saveData(tracks, "mock-playlist.json")}>Save track data</button>
-				<button onClick={() => this.forceUpdate()}>force update</button>
-
 			</div>
 		);
 	}

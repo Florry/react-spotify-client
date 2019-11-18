@@ -6,12 +6,17 @@ import Utils from "../utils/Utils";
 const starredSongs = require("../json/spotifyStarred.json");
 
 /** @typedef {import("../stores/PlayerStore").default} PlayerStore */
+/** @typedef {import("../stores/PlaylistStore").default} PlaylistStore */
 
-@inject("playerStore")
+@inject("playerStore", "playlistStore")
 class AlbumTrackRow extends React.Component {
 
 	/** @type {PlayerStore} */
 	playerStore = this.props.playerStore;
+
+	/** @type {PlaylistStore} */
+	playlistStore = this.props.playlistStore;
+
 	/**
 	 * @param {Array<?>} metadata
 	*/
@@ -26,8 +31,19 @@ class AlbumTrackRow extends React.Component {
 		return length;
 	}
 
-	shouldComponentUpdate(nextProps, nextState, nextContext) {
+	shouldComponentUpdate() {
 		return false;
+	}
+
+	handleOnDragStart(e) {
+		e.preventDefault();
+		this.playlistStore.setIsDragging(true);
+		document.addEventListener("mouseup", (e) => this.handleOnDragEnd(e));
+	}
+
+	handleOnDragEnd(e) {
+		this.playlistStore.setIsDragging(false);
+		document.removeEventListener("mouseup", (e) => this.handleOnDragEnd(e));
 	}
 
 	render() {
@@ -82,15 +98,19 @@ class AlbumTrackRow extends React.Component {
 					duration_ms: duration,
 					track_number: trackNumber,
 					disc_number: discNumber,
-					is_local: isLocal
+					is_local: isLocal,
+					type
 				} = song.track;
 
-				let smallestDimensions = 10000;
+				let smallestDiff = 10000;
 				let albumCover;
 
+				// TODO: Make configurable
+				const albumCoverSize = 99;
+
 				album.images.forEach(img => {
-					if (img.width < smallestDimensions) {
-						smallestDimensions = img.width;
+					if (albumCoverSize - img.width < smallestDiff) {
+						smallestDiff = albumCoverSize - img.width;
 						albumCover = img.url;
 					}
 				});
@@ -102,6 +122,9 @@ class AlbumTrackRow extends React.Component {
 
 				rows.push(
 					<div
+						draggable
+						onDragStart={(e) => this.handleOnDragStart(e)}
+						onDragEnd={(e) => this.handleOnDragEnd(e)}
 						onDoubleClick={() => {
 							this.playerStore.playTrack(uri);
 							this.playerStore.setCurrentPlaylist(playlistUri, uri);
@@ -138,7 +161,7 @@ class AlbumTrackRow extends React.Component {
 						<div
 							className="td td-number"
 						>
-							{trackNumber}
+							{type === "episode" ? <i class="fas fa-podcast"></i> : trackNumber}
 						</div>
 						<div
 							className="td td-name"

@@ -60,6 +60,19 @@ tr.td:first-child {
 	opacity: 0.5;
 }
 
+.playlist.isDragging .tr:hover {
+	border-top: 1px solid #1ed760;
+}
+
+.sidebar.isDragging li:hover {
+	color: #1ed760;
+	outline: 1px solid #1ed760;
+}
+
+.sidebar.isDragging li:hover a {
+	color: #1ed760;
+}
+
 td, .td {
 	vertical-align: top;
 	max-width: calc(2560px / 3);
@@ -249,6 +262,7 @@ button:focus {
 }
 
 .sidebar {
+	background-color: #121212;
 	color: #fff;
 	top: 0;
 	left: 0;
@@ -299,22 +313,6 @@ button:focus {
 	height: 10px;
 }
 
-.sidebar h2#home:before {
-	content: "";
-}
-
-.sidebar h2#explore:before {
-	content: "\f8d9";
-}
-
-.sidebar h2#radio:before {
-	content: "";
-}
-
-.sidebar h2#queue:before {
-	content: "";
-}
-
 .sidebar h2 a, .sidebar h2 a:visited {
 	color: rgb(179, 179, 179);
 	text-decoration: none;
@@ -338,48 +336,73 @@ button:focus {
 	font-style: normal;
 	display: inline-block;
 	text-decoration: inherit;
-	content: "";
-	top: 2.5px;
+	content: var(--no-image);
+	text-align: center;
+	font-size: 15px;
+	background-image: var(--bg-image);
+	background-size: 20px 20px;
+	/* top: 2.5px; */
 	position: relative;
 	margin-right: 10px;
-	width: 10px;
-	height: 10px;
+	width: 20px;
+	height: 20px;
+}
+
+#library .sidebar-playlist-item:before {
+	top: 0.5px;
 }
 
 .sidebar-playlist-item#for-you:before {
 	content: "";
-	top: 1.5px;
 }
 
 .sidebar-playlist-item#recently-played:before {
 	content: "";
-	top: 1.5px;
 }
 
 .sidebar-playlist-item#albums:before {
 	content: "";
-	top: 1.5px;
 }
 
 .sidebar-playlist-item#artists:before {
 	content: "";
-	top: 1.5px;
 }
 
 .sidebar-playlist-item#local-files:before {
 	content: "";
-	top: 1.5px;
 }
 
 .sidebar-playlist-item#podcasts:before {
 	content: "";
-	top: 1.5px;
 }
 
 .sidebar-playlist-item#starred:before {
 	content: "\f005";
 	color: #d8ba58;
-	top: 1.5px;
+}
+
+.sidebar-playlist-item#home:before {
+	content: "";
+}
+
+.sidebar-playlist-item#explore:before {
+	content: "\f8d9";
+}
+
+.sidebar-playlist-item#radio:before {
+	content: "";
+}
+
+.sidebar-playlist-item#queue:before {
+	content: "";
+}
+
+.sidebar a {
+	cursor: inherit;
+}
+
+.sidebar a {
+	width: 90%;
 }
 
 .playlist-owner {

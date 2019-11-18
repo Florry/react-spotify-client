@@ -23,6 +23,9 @@ export default class PlaylistStore {
 	@observable
 	_tracks = observable.map();
 
+	@observable
+	_isDragging = observable.box(false);
+
 	/**
 	 * @param {String=} next
 	 */
@@ -136,6 +139,16 @@ export default class PlaylistStore {
 
 	_getNextString(next) {
 		return next.replace(API_ROOT, "");
+	}
+
+	@action
+	setIsDragging(isDragging) {
+		this._isDragging.set(isDragging);
+	}
+
+	@computed
+	get isDragging() {
+		return this._isDragging.get();
 	}
 
 }

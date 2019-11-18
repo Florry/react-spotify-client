@@ -98,9 +98,7 @@ export default class PlayerStore {
 		if (state === null) {
 			this._playing.set(false);
 			this._state.set(DEFAULT_STATE);
-		} else if (!this._state.paused && state.position !== this._state.position && state.paused && !state.position) // NOTE: This results in multiple song skips!
-			this.nextTrack();
-		else {
+		} else {
 			this._playing.set(true);
 			this._state.set({
 				paused: state.paused,

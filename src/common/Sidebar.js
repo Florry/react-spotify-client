@@ -1,4 +1,4 @@
-import { PLAYLIST, QUEUE } from "../constants/routes";
+import { PLAYLIST, QUEUE, PLAYLIST_REDIRECT } from "../constants/routes";
 import { inject, observer } from "mobx-react";
 import { Link } from "react-router-dom";
 import React from "react";
@@ -20,9 +20,14 @@ class Sidebar extends React.Component {
 	/** @type {PlayerStore} */
 	playerStore = this.props.playerStore;
 
+	state = {
+		isDragging: false
+	};
+
 	async componentDidMount() {
 		await this.playlistStore.loadPlaylistsForLoggedInUser();
 		this.forceUpdate();
+		this.playlistStore._isDragging.observe(change => this.setState({ isDragging: change.newValue }));
 	}
 
 	async playFromPlaylist(playlistUri) {
@@ -32,20 +37,25 @@ class Sidebar extends React.Component {
 	}
 
 	render() {
+		const { isDragging } = this.state;
 		const playlists = this.playlistStore.playlists;
 		const displayName = this.authStore.displayName;
 
 		return (
 			<div
-				className="sidebar"
+				className={`sidebar ${isDragging ? "isDragging" : ""}`}
 			>
-				<h2 id="home">Home</h2>
-				<h2 id="explore">Explore</h2>
-				<h2 id="radio">Radio</h2>
-				<h2 id="queue"><Link to={QUEUE}>Queue</Link></h2>
-				<h2>Library</h2>
 				<ul>
-					<li id="for-you" className="sidebar-playlist-item">For you</li>
+					<li className="sidebar-playlist-item" id="home">Home</li>
+					<li className="sidebar-playlist-item" id="explore">Explore</li>
+					<li className="sidebar-playlist-item" id="radio">Radio</li>
+					<li className="sidebar-playlist-item" id="queue"><Link to={QUEUE}>Queue</Link></li>
+				</ul>
+
+				<h2>Library</h2>
+
+				<ul id="library">
+					<li id="for-you" className="sidebar-playlist-item">Made for you</li>
 					<li id="recently-played" className="sidebar-playlist-item">Recently played</li>
 					<li id="albums" className="sidebar-playlist-item">Albums</li>
 					<li id="artists" className="sidebar-playlist-item">Artists</li>
@@ -53,6 +63,7 @@ class Sidebar extends React.Component {
 					<li id="podcasts" className="sidebar-playlist-item">Podcasts</li>
 					<li id="starred" className="sidebar-playlist-item">Starred</li>
 				</ul>
+
 				<h2>Playlists</h2>
 				<ul>
 
@@ -62,9 +73,14 @@ class Sidebar extends React.Component {
 								key={playlist.uri}
 								className="sidebar-playlist-item"
 								onDoubleClick={() => this.playFromPlaylist(playlist.uri)}
+								style={{
+									// @ts-ignore
+									"--bg-image": `url(${playlist.images[0] ? playlist.images[0].url : ""})`,
+									"--no-image": `${!playlist.images[0] ? "''" : "' '"}`
+								}}
 							>
 								<Link
-									to={PLAYLIST.replace(":playlistId", playlist.uri)}
+									to={PLAYLIST_REDIRECT.replace(":playlistId", playlist.uri)}
 								>
 									{playlist.name} {displayName !== playlist.owner.display_name && <span className="playlist-owner">by {playlist.owner.display_name}</span>}
 								</Link>
