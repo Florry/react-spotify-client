@@ -1,6 +1,7 @@
 import { inject } from "mobx-react";
 import React from "react";
 import Utils from "../utils/Utils";
+import DraggableTrack from "./DraggableTrack";
 
 // @ts-ignore
 const starredSongs = require("../json/spotifyStarred.json");
@@ -33,17 +34,6 @@ class AlbumTrackRow extends React.Component {
 
 	shouldComponentUpdate() {
 		return false;
-	}
-
-	handleOnDragStart(e) {
-		e.preventDefault();
-		this.playlistStore.setIsDragging(true);
-		document.addEventListener("mouseup", (e) => this.handleOnDragEnd(e));
-	}
-
-	handleOnDragEnd(e) {
-		this.playlistStore.setIsDragging(false);
-		document.removeEventListener("mouseup", (e) => this.handleOnDragEnd(e));
 	}
 
 	render() {
@@ -88,7 +78,7 @@ class AlbumTrackRow extends React.Component {
 					</div>
 				);
 			else {
-				const { added_at: added } = song;
+				const { added_at: added, clientId } = song;
 				const {
 					name,
 					uri,
@@ -121,75 +111,78 @@ class AlbumTrackRow extends React.Component {
 				const songUnplayable = !playable || !!isLocal;
 
 				rows.push(
-					<div
-						draggable
-						onDragStart={(e) => this.handleOnDragStart(e)}
-						onDragEnd={(e) => this.handleOnDragEnd(e)}
-						onDoubleClick={() => {
-							this.playerStore.playTrack(uri);
-							this.playerStore.setCurrentPlaylist(playlistUri, uri);
-						}}
-						hidden={this.props.hidden}
-						title={songs[i].track.name}
-						className={`
+					<DraggableTrack
+						uri={uri}
+						key={clientId + "-album-track-row-"}
+					>
+						<div
+							line-row={i}
+							onDoubleClick={() => {
+								this.playerStore.playTrack(uri);
+								this.playerStore.setCurrentPlaylist(playlistUri, uri);
+							}}
+							hidden={this.props.hidden}
+							title={songs[i].track.name}
+							className={`
 							tr
 							${!!songs[i - 1] && songs[i - 1].track.disc_number !== discNumber ? "cd-divider" : ""}
 							${i === 0 ? "album-top-row" : ""}
 							${songUnplayable ? "unplayable" : ""}
 						`}
-						cd-number={`cd ${discNumber}`}
-						key={album.uri + "-album-track-row-" + i.toString()}
-					>
-						<div
-							className="td album-td"
+							cd-number={`cd ${discNumber}`}
+
 						>
 							<div
-								style={{
-									backgroundImage: albumCover ? `url(${albumCover}?url=https://github.com/Florry)` : "url(../images/no-cover-art.png)"
-								}}
-								className={i === 0
-									? (songs.length === 1
-										? "album-art single-song"
-										: "album-art")
-									: ""} />
+								className="td album-td"
+							>
+								<div
+									style={{
+										backgroundImage: albumCover ? `url(${albumCover}?url=https://github.com/Florry)` : "url(../images/no-cover-art.png)"
+									}}
+									className={i === 0
+										? (songs.length === 1
+											? "album-art single-song"
+											: "album-art")
+										: ""} />
+							</div>
+							<div
+								className="td td-starred"
+							>
+								{isStarred ? <span className="filled"><i className="fas fa-star" /></span> : <i className="far fa-star" />}
+							</div>
+							<div
+								className="td td-number"
+							>
+								{type === "episode" ? <i class="fas fa-podcast"></i> : trackNumber}
+							</div>
+							<div
+								className="td td-name"
+							>
+								{name}
+							</div>
+							<div
+								className="td td-artist"
+							>
+								{artistsString}
+							</div>
+							<div
+								className="td td-duration"
+							>
+								{Utils.duration(duration)}
+							</div>
+							<div
+								className="td td-album"
+								id={album.uri}
+							>
+								{album.name}
+							</div>
+							<div
+								className="td td-date"
+							>
+								{added && added !== "1970-01-01T00:00:00Z" ? added.substring(0, 10) : ""}
+							</div>
 						</div>
-						<div
-							className="td td-starred"
-						>
-							{isStarred ? <span className="filled"><i className="fas fa-star" /></span> : <i className="far fa-star" />}
-						</div>
-						<div
-							className="td td-number"
-						>
-							{type === "episode" ? <i class="fas fa-podcast"></i> : trackNumber}
-						</div>
-						<div
-							className="td td-name"
-						>
-							{name}
-						</div>
-						<div
-							className="td td-artist"
-						>
-							{artistsString}
-						</div>
-						<div
-							className="td td-duration"
-						>
-							{Utils.duration(duration)}
-						</div>
-						<div
-							className="td td-album"
-							id={album.uri}
-						>
-							{album.name}
-						</div>
-						<div
-							className="td td-date"
-						>
-							{added && added !== "1970-01-01T00:00:00Z" ? added.substring(0, 10) : ""}
-						</div>
-					</div>
+					</DraggableTrack>
 				);
 			}
 		});

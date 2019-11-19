@@ -60,16 +60,16 @@ tr.td:first-child {
 	opacity: 0.5;
 }
 
-.playlist.isDragging .tr:hover {
+.playlist.isDraggingTrack .tr:hover {
 	border-top: 1px solid #1ed760;
 }
 
-.sidebar.isDragging li:hover {
+.sidebar.isDraggingTrack li:hover {
 	color: #1ed760;
 	outline: 1px solid #1ed760;
 }
 
-.sidebar.isDragging li:hover a {
+.sidebar.isDraggingTrack li:hover a {
 	color: #1ed760;
 }
 

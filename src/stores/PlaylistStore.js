@@ -1,8 +1,8 @@
-import { API_ROOT, PATH_LOGGED_IN_USER_PLAYLISTS, PATH_GET_PLAYLIST_BY_ID } from "../constants/api-constants";
+import { API_ROOT, PATH_LOGGED_IN_USER_PLAYLISTS, PATH_GET_PLAYLIST_BY_ID, PATH_ADD_TRACKS_TO_PLAYLIST } from "../constants/api-constants";
 import { observable, computed, action } from "mobx";
-import APIClient from "../network/APIClient";
-
 import promiseLimit from "promise-limit";
+import APIClient from "../network/APIClient";
+import uuid from "uuid";
 
 /** @typedef {import("./RootStore").default} RootStore*/
 
@@ -24,7 +24,7 @@ export default class PlaylistStore {
 	_tracks = observable.map();
 
 	@observable
-	_isDragging = observable.box(false);
+	_isDraggingTrack = observable.box(false);
 
 	/**
 	 * @param {String=} next
@@ -62,6 +62,8 @@ export default class PlaylistStore {
 		try {
 			const response = await APIClient.get(this.rootStore.stores.authStore.accessToken, PATH_GET_PLAYLIST_BY_ID.replace(":playlistId", playlistUri.replace("spotify:playlist:", "")));
 
+			response.tracks.items = response.tracks.items.map(track => ({ ...track, clientId: uuid.v4() }));
+
 			this._playlists.set(response.uri, response);
 
 			if (response.tracks.items)
@@ -90,16 +92,26 @@ export default class PlaylistStore {
 	/**
 	 * @param {Array<String>} playlistUri
 	 * @param {String=} next
+	 * @param {Number=} inputOffset
 	 */
 	@action
-	async loadTracksInPlaylist(playlistUri, next) {
+	async loadTracksInPlaylist(playlistUri, next, inputOffset) {
 		const LIMIT = 100;
 		const playlist = await this.getPlaylist(playlistUri);
+		const offset = inputOffset || playlist && playlist.tracks && playlist.tracks.items ? playlist.tracks.items.length : 0;
+
+		if (!!playlist && offset >= playlist.tracks.total)
+			return;
 
 		try {
-			const response = await APIClient.get(this.rootStore.stores.authStore.accessToken, next || playlist.tracks.href.replace(API_ROOT, ""));
+			let path = next || playlist.tracks.href.replace(API_ROOT, "");
 
-			response.items = response.items.filter(track => !!track.track);
+			if (!!offset)
+				path = path.replace("offset=0", "offset=" + offset);
+
+			const response = await APIClient.get(this.rootStore.stores.authStore.accessToken, path);
+
+			response.items = response.items.map(track => ({ ...track, clientId: uuid.v4() })).filter(track => !!track.track);
 
 			response.items.map(track => this._tracks.set(track.track.uri, track));
 
@@ -108,7 +120,8 @@ export default class PlaylistStore {
 
 			const trackUris = playlist.tracks.items.map(track => track.track.uri);
 
-			playlist.tracks.items.push(...response.items.filter(track => !trackUris.includes(track.track.uri)));
+			playlist.tracks.items.push(...response.items);
+			playlist.tracks.total = response.total;
 
 			this._playlists.set(playlistUri, playlist);
 
@@ -118,7 +131,7 @@ export default class PlaylistStore {
 				const limit = promiseLimit(10);
 
 				for (let i = 0; i < timesToFetch; i++)
-					promises.push(limit(() => this.loadTracksInPlaylist(playlistUri, this._getNextString(response.next).replace(`offset=${LIMIT}`, "offset=" + ((i + 1) * LIMIT)))));
+					promises.push(limit(() => this.loadTracksInPlaylist(playlistUri, this._getNextString(response.next).replace(`offset=${LIMIT}`, "offset=" + ((i + 1 + offset) * LIMIT)), offset)));
 
 				await Promise.all(promises);
 			}
@@ -142,13 +155,24 @@ export default class PlaylistStore {
 	}
 
 	@action
-	setIsDragging(isDragging) {
-		this._isDragging.set(isDragging);
+	setIsDraggingTrack(isDraggingTrack) {
+		this._isDraggingTrack.set(isDraggingTrack);
 	}
 
 	@computed
-	get isDragging() {
-		return this._isDragging.get();
+	get isDraggingTrack() {
+		return this._isDraggingTrack.get();
+	}
+
+	/**
+	 * @param {String} playlistUri
+	 * @param {Array<String>} tracks
+	 */
+	@action
+	addTracksToPlaylist(playlistUri, tracks) {
+		const urisQuery = tracks.join(",");
+		const path = `${PATH_ADD_TRACKS_TO_PLAYLIST.replace(":playlistId", playlistUri.replace("spotify:playlist:", ""))}?uris=${urisQuery}`;
+		APIClient.post(this.rootStore.stores.authStore.accessToken, path);
 	}
 
 }

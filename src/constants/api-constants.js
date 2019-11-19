@@ -36,5 +36,6 @@ export const PATH_PAUSE = "me/player/pause";
 export const PATH_LOGGED_IN_USER_PLAYLISTS = "me/playlists";
 export const PATH_GET_PLAYLIST_BY_ID = "playlists/:playlistId";
 export const PATH_MULTIPLE_TRACKS = "tracks";
+export const PATH_ADD_TRACKS_TO_PLAYLIST = "playlists/:playlistId/tracks";
 
 export const API_LOGIN_URI = encodeURI(`${API_ROOT_ACCOUNTS}/${PATH_AUTORIZE}?client_id=${API_CLIENT_ID}&scope=${API_SCOPES.join(" ")}&response_type=token&redirect_uri=http://localhost:3000/spotify-api-calllback`);

@@ -1,14 +1,26 @@
 export default class Utils {
 
 	static duration(milliseconds) {
-		const minutes = Math.floor(milliseconds / 60000);
-		/** @type {Number|String}*/
-		let seconds = ((milliseconds - minutes * 60000) / 1000).toFixed(0);
+		const minutes = milliseconds / (1000 * 60);
+		const m = Math.floor(minutes);
 
-		if (seconds < 10)
-			seconds = "0" + seconds;
+		const absoluteSeconds = Math.floor((minutes - m) * 60);
+		const s = absoluteSeconds > 9 ? absoluteSeconds : '0' + absoluteSeconds;
 
-		return `${minutes}:${seconds}`;
+		return `${m}:${s}`;
+	}
+
+	static durationHours(milliseconds) {
+		const hours = milliseconds / (1000 * 60 * 60);
+		const h = Math.floor(hours);
+
+		const minutes = (hours - h) * 60;
+		const m = Math.floor(minutes);
+
+		const seconds = (minutes - m) * 60;
+		const s = Math.floor(seconds);
+
+		return `${h ? h + "h" : ""} ${m}m ${s}s`;
 	}
 
 	static shuffleArray(array) {

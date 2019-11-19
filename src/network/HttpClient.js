@@ -1,5 +1,7 @@
 /** @typedef {import("../stores/AuthStore").default} AuthStore */
 
+// TODO: add query!
+
 /**
  * Generic http client
  */

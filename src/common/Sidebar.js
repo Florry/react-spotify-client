@@ -21,13 +21,13 @@ class Sidebar extends React.Component {
 	playerStore = this.props.playerStore;
 
 	state = {
-		isDragging: false
+		isDraggingTrack: false
 	};
 
 	async componentDidMount() {
 		await this.playlistStore.loadPlaylistsForLoggedInUser();
 		this.forceUpdate();
-		this.playlistStore._isDragging.observe(change => this.setState({ isDragging: change.newValue }));
+		this.playlistStore._isDraggingTrack.observe(change => this.setState({ isDraggingTrack: change.newValue }));
 	}
 
 	async playFromPlaylist(playlistUri) {
@@ -37,13 +37,13 @@ class Sidebar extends React.Component {
 	}
 
 	render() {
-		const { isDragging } = this.state;
+		const { isDraggingTrack } = this.state;
 		const playlists = this.playlistStore.playlists;
 		const displayName = this.authStore.displayName;
 
 		return (
 			<div
-				className={`sidebar ${isDragging ? "isDragging" : ""}`}
+				className={`sidebar ${isDraggingTrack ? "isDraggingTrack" : ""}`}
 			>
 				<ul>
 					<li className="sidebar-playlist-item" id="home">Home</li>
@@ -78,6 +78,9 @@ class Sidebar extends React.Component {
 									"--bg-image": `url(${playlist.images[0] ? playlist.images[0].url : ""})`,
 									"--no-image": `${!playlist.images[0] ? "''" : "' '"}`
 								}}
+								track-droppable="true"
+								track-droppable-playlist="true"
+								playlist-uri={playlist.uri}
 							>
 								<Link
 									to={PLAYLIST_REDIRECT.replace(":playlistId", playlist.uri)}

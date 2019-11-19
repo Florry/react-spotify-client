@@ -2,6 +2,8 @@ import { inject, observer } from "mobx-react";
 import AlbumTrackRow from "../../common/AlbumTrackRow";
 import React from "react";
 import uuid from "uuid";
+import DraggableTrack from "../../common/DraggableTrack";
+import Utils from "../../utils/Utils";
 
 // TODO: move a lot of this code into components!
 
@@ -67,8 +69,11 @@ class PlaylistPage extends React.Component {
 		playlistHeight: 0,
 		// tracks: playlist,
 		// trackPlaylistItems: this.getTrackIPlaylisttems(playlist)
-		isDragging: false
+		isDraggingTrack: false
 	};
+
+	// TODO: TEMP
+	_totalPlaytime = 0;
 
 	_nextTenHeightCache = {};
 	_heightCache = {};
@@ -114,7 +119,7 @@ class PlaylistPage extends React.Component {
 			this.handleScroll();
 		}
 
-		this.playlistStore._isDragging.observe(change => this.setState({ isDragging: change.newValue }));
+		this.playlistStore._isDraggingTrack.observe(change => this.setState({ isDraggingTrack: change.newValue }));
 
 		// const tracks = playlist;
 		// const trackPlaylistItems = this.getTrackPlaylistItems(tracks);
@@ -333,6 +338,9 @@ class PlaylistPage extends React.Component {
 		!!tracks && tracks.map((track, i) => {
 			const id = uuid.v4();
 
+			if (!!track)
+				this._totalPlaytime += track.track.duration_ms;
+
 			if (
 				(!!tracks[i - 1] && !!track && tracks[i - 1].track.album && tracks[i - 1].track.album.uri === track.track.album.uri)
 				||
@@ -401,37 +409,12 @@ class PlaylistPage extends React.Component {
 		return totalHeight;
 	}
 
-	saveData(data, filename) {
-		if (!data) {
-			console.error("Console.save: No data")
-			return;
-		}
-
-		if (!filename) filename = "console.json"
-
-		if (typeof data === "object") {
-			data = JSON.stringify(data)
-		}
-
-		var blob = new Blob([data], {
-			type: "text/json"
-		}),
-			e = document.createEvent("MouseEvents"),
-			a = document.createElement("a")
-
-		a.download = filename
-		a.href = window.URL.createObjectURL(blob)
-		a.dataset.downloadurl = ["text/json", a.download, a.href].join(":")
-		e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null)
-		a.dispatchEvent(e)
-	}
-
 	render() {
-		const { sortBy, sortOrder, currentOffset, playlistHeight, songsToRender, tracks, isDragging } = this.state;
+		const { sortBy, sortOrder, currentOffset, playlistHeight, songsToRender, tracks, isDraggingTrack } = this.state;
 
 		return (
 			<div
-				className={`playlist ${isDragging ? "isDragging" : ""}`}
+				className={`playlist ${isDraggingTrack ? "isDraggingTrack" : ""}`}
 				style={{
 					width: 1582,
 					position: "relative",
@@ -472,6 +455,7 @@ class PlaylistPage extends React.Component {
 							/>
 						)
 					}
+					<span style={{ color: "#fff" }}>{tracks.length} songs | {Utils.durationHours(this._totalPlaytime)}</span>
 				</div>
 			</div>
 		);

@@ -3,6 +3,7 @@ import VolumeControl from "./VolumeControl";
 import Seekbar from "./Seekbar";
 import React from "react";
 import { NO_REPEAT, REPEAT, REPEAT_ONCE } from "../constants/player-constants";
+import DraggableTrack from "./DraggableTrack";
 
 /** @typedef {import("../stores/PlayerStore").default} PlayerStore */
 
@@ -15,7 +16,8 @@ class Player extends React.Component {
 
 	state = {
 		playerState: {},
-		ready: false
+		ready: false,
+		playing: false
 	};
 
 	componentDidMount() {
@@ -23,6 +25,7 @@ class Player extends React.Component {
 		this.playerStore._state.observe(state => this.setState({ playerState: state.newValue }));
 		this.playerStore._ready.observe(state => this.setState({ ready: state.newValue }));
 		this.playerStore._currentPlaylist.observe(state => this.setState({ currentPlaylist: state.newValue }));
+		this.playerStore._playing.observe(state => this.setState({ playing: state.newValue }));
 	}
 
 	async playOrPause() {
@@ -35,9 +38,9 @@ class Player extends React.Component {
 	}
 
 	render() {
-		const { name, artists = [], album = { images: [] }, shuffle = false, repeatMode = 0, paused: statePaused } = this.state.playerState;
+		const { name, artists = [], album = { images: [] }, shuffle = false, repeatMode = 0, paused: statePaused, currentTrack: { uri } = { uri: null } } = this.state.playerState;
 		const paused = typeof statePaused === "undefined" || statePaused;
-		const ready = this.state.ready;
+		const { ready, playing } = this.state;
 		const artistsString = artists.map(artist => artist.name).join(",")
 
 		let biggestDimensions = 0;
@@ -61,12 +64,17 @@ class Player extends React.Component {
 					>
 						&nbsp;OFFLINE
 						</h2>
-					<div
-						className="album-cover"
-						style={{
-							backgroundImage: albumCover && `url(${albumCover})`
-						}}
-					/>
+					<DraggableTrack
+						uri={uri}
+						disabled={!ready || !playing}
+					>
+						<div
+							className="album-cover"
+							style={{
+								backgroundImage: albumCover && `url(${albumCover})`
+							}}
+						/>
+					</DraggableTrack>
 
 					<div
 						className="now-playing"

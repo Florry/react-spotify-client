@@ -6,7 +6,7 @@ import React from "react";
 
 export default () => {
 
-	const defaultPlaylist = encodeURI(PLAYLIST.replace(":playlistId", "spotify:playlist:4HFv8kVXrc7JLEg21RJhxt"));
+	const defaultPlaylist = encodeURI(PLAYLIST.replace(":playlistId", "spotify:playlist:1zFxtCRf3uaTe3P2fIKGTy"));
 	console.log(defaultPlaylist);
 
 	return (
@@ -20,7 +20,7 @@ export default () => {
 			{/* TODO: THIS IS A QUICK HACK!!*/}
 			<Route path={PLAYLIST_REDIRECT} render={props => (<Redirect to={`/playlist/${props.match.params.playlistId}`} />)} exact />
 
-			<Route exact path="/" render={() => (<Redirect to="/playlist/spotify:playlist:4HFv8kVXrc7JLEg21RJhxt" />)} />
+			<Route exact path="/" render={() => (<Redirect to={defaultPlaylist} />)} />
 
 		</Switch>
 	);
