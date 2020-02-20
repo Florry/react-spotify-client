@@ -14,22 +14,16 @@ class Player extends React.Component {
 	/** @type {PlayerStore} */
 	playerStore = this.props.playerStore;
 
-	state = {
-		playerState: {},
-		ready: false,
-		playing: false
-	};
-
 	componentDidMount() {
 		// TODO: TEMP, this shouldn't be necessary but it works for now...
-		this.playerStore._state.observe(state => this.setState({ playerState: state.newValue }));
-		this.playerStore._ready.observe(state => this.setState({ ready: state.newValue }));
-		this.playerStore._currentPlaylist.observe(state => this.setState({ currentPlaylist: state.newValue }));
-		this.playerStore._playing.observe(state => this.setState({ playing: state.newValue }));
+		this.playerStore._state.observe(() => this.forceUpdate());
+		this.playerStore._ready.observe(() => this.forceUpdate());
+		this.playerStore._playing.observe(() => this.forceUpdate());
 	}
 
 	async playOrPause() {
-		const paused = typeof this.state.playerState.paused === "undefined" || this.state.playerState.paused;
+		const playerState = this.playerStore.state;
+		const paused = typeof playerState.paused === "undefined" || playerState.paused;
 
 		if (paused)
 			await this.playerStore.play();
@@ -38,9 +32,11 @@ class Player extends React.Component {
 	}
 
 	render() {
-		const { name, artists = [], album = { images: [] }, shuffle = false, repeatMode = 0, paused: statePaused, currentTrack: { uri } = { uri: null } } = this.state.playerState;
+		const playerState = this.playerStore.state;
+		const { name, artists = [], album = { images: [] }, shuffle = false, repeatMode = 0, paused: statePaused, currentTrack: { uri } = { uri: null } } = playerState;
 		const paused = typeof statePaused === "undefined" || statePaused;
-		const { ready, playing } = this.state;
+		const playing = this.playerStore.playing;
+		const ready = this.playerStore.ready;
 		const artistsString = artists.map(artist => artist.name).join(",")
 
 		let biggestDimensions = 0;

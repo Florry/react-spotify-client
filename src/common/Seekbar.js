@@ -18,8 +18,7 @@ class Seekbar extends React.Component {
 
 	state = {
 		position: this.playerStore.state.position,
-		paused: true,
-		playing: false
+		paused: true
 	};
 
 	seekbarInterval;
@@ -32,16 +31,13 @@ class Seekbar extends React.Component {
 			if (state.newValue.position !== this.state.position)
 				newState.position = state.newValue.position;
 
-			if (state.newValue.paused !== this.state.paused)
-				newState.paused = state.newValue.paused;
-
 			this.setState({ ...newState });
 		});
 
-		this.playerStore._playing.observe(state => this.setState({ playing: state.newValue }));
+		this.playerStore._playing.observe(() => this.forceUpdate());
 
 		this.seekbarInterval = setInterval(async () => {
-			if (!this.state.paused) {
+			if (!this.playerStore.state.paused) {
 				await this.setState({ position: this.state.position + SEEKBAR_UPDATE_RATE });
 
 				if (this.state.position >= this.playerStore.state.duration) {
@@ -62,8 +58,9 @@ class Seekbar extends React.Component {
 	}
 
 	render() {
+		const playing = this.playerStore.playing;
 		const { duration } = this.playerStore.state;
-		const { position, playing } = this.state;
+		const { position } = this.state;
 
 		return (
 			<div

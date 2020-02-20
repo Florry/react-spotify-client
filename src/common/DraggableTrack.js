@@ -45,13 +45,14 @@ class DraggableTrack extends React.Component {
 	}
 
 	render() {
-		const { children, disabled } = this.props;
+		const { children, disabled, className } = this.props;
 
 		return (
 			<div
 				draggable={disabled ? false : true}
 				onDragStart={this.handleOnDragStart}
 				track-droppable="true"
+				className={className}
 			>
 				{children}
 			</div>

@@ -1,4 +1,4 @@
-import { inject } from "mobx-react";
+import { inject, observer } from "mobx-react";
 import React from "react";
 import Utils from "../utils/Utils";
 import DraggableTrack from "./DraggableTrack";
@@ -10,6 +10,7 @@ const starredSongs = require("../json/spotifyStarred.json");
 /** @typedef {import("../stores/PlaylistStore").default} PlaylistStore */
 
 @inject("playerStore", "playlistStore")
+@observer
 class AlbumTrackRow extends React.Component {
 
 	/** @type {PlayerStore} */
@@ -32,9 +33,9 @@ class AlbumTrackRow extends React.Component {
 		return length;
 	}
 
-	shouldComponentUpdate() {
-		return false;
-	}
+	// shouldComponentUpdate() {
+	// 	return false;
+	// }
 
 	render() {
 		const { songs: inputSongs, playlistUri } = this.props;
@@ -114,6 +115,12 @@ class AlbumTrackRow extends React.Component {
 					<DraggableTrack
 						uri={uri}
 						key={clientId + "-album-track-row-"}
+						className={`
+						tr
+						${!!songs[i - 1] && songs[i - 1].track.disc_number !== discNumber ? "cd-divider" : ""}
+						${i === 0 ? "album-top-row" : ""}
+						${songUnplayable ? "unplayable" : ""}
+					`}
 					>
 						<div
 							line-row={i}
@@ -123,12 +130,7 @@ class AlbumTrackRow extends React.Component {
 							}}
 							hidden={this.props.hidden}
 							title={songs[i].track.name}
-							className={`
-							tr
-							${!!songs[i - 1] && songs[i - 1].track.disc_number !== discNumber ? "cd-divider" : ""}
-							${i === 0 ? "album-top-row" : ""}
-							${songUnplayable ? "unplayable" : ""}
-						`}
+
 							cd-number={`cd ${discNumber}`}
 
 						>

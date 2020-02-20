@@ -68,17 +68,19 @@ export default class PlayerStore {
 		window.onSpotifyWebPlaybackSDKReady = () => {
 			Spotify = window.Spotify;
 			this._playerInstance = new Spotify.Player({
-				name: "React spotify client",
+				name: "react spotify client",
 				getOAuthToken: (cb) => cb(this.rootStore.stores.authStore._accessToken)
 			});
 
 			this._setupStateListeners();
 
-			this._playerInstance.connect().then(success => {
-				if (success)
-					console.log("Connected to spotify web playback");
-				console.log(this._playerInstance);
-			});
+			this._playerInstance.connect()
+				.then(success => {
+					if (success)
+						console.log("Connected to spotify web playback");
+
+					console.log(this._playerInstance);
+				});
 		};
 	}
 

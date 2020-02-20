@@ -21,13 +21,13 @@ class Sidebar extends React.Component {
 	playerStore = this.props.playerStore;
 
 	state = {
-		isDraggingTrack: false
+		searchQuery: ""
 	};
 
 	async componentDidMount() {
 		await this.playlistStore.loadPlaylistsForLoggedInUser();
 		this.forceUpdate();
-		this.playlistStore._isDraggingTrack.observe(change => this.setState({ isDraggingTrack: change.newValue }));
+		this.playlistStore._isDraggingTrack.observe(() => this.forceUpdate());
 	}
 
 	async playFromPlaylist(playlistUri) {
@@ -36,10 +36,19 @@ class Sidebar extends React.Component {
 		this.playerStore.setCurrentPlaylist(playlistUri);
 	}
 
+	updateSearch(e) {
+		this.setState({ searchQuery: e.target.value });
+	}
+
+	removeSearchQuery() {
+		this.setState({ searchQuery: "" })
+	}
+
 	render() {
-		const { isDraggingTrack } = this.state;
+		const isDraggingTrack = this.playlistStore.isDraggingTrack;
 		const playlists = this.playlistStore.playlists;
 		const displayName = this.authStore.displayName;
+		const { searchQuery } = this.state;
 
 		return (
 			<div
@@ -65,10 +74,30 @@ class Sidebar extends React.Component {
 				</ul>
 
 				<h2>Playlists</h2>
-				<ul>
 
+				<input
+					style={{ // TODO: TEMP
+						marginTop: 10,
+						marginBottom: 10
+					}}
+					onChange={e => this.updateSearch(e)}
+					value={searchQuery}
+					placeholder="filter"
+				/>
+				<i
+					className="far fa-times-circle"
+					style={{  // TODO: TEMP
+						marginLeft: 5,
+						opacity: searchQuery ? 1 : 0
+					}}
+					onClick={() => this.removeSearchQuery()}
+				>
+
+				</i>
+
+				<ul>
 					{
-						playlists.map((playlist, i) =>
+						playlists.filter(playlist => playlist.name.toLowerCase().includes(searchQuery.toLowerCase())).map((playlist, i) =>
 							<li
 								key={playlist.uri}
 								className="sidebar-playlist-item"

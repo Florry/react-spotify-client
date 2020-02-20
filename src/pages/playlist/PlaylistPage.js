@@ -59,7 +59,6 @@ class PlaylistPage extends React.Component {
 		metadata: [],
 		originalSortOrderMetadata: [],
 		scrollTop: window.scrollY,
-		playlistId: this.props.match.params.playlistId,
 		currentOffset: 0,
 		originalTrackOrder: [],
 		tracks: [],
@@ -85,8 +84,8 @@ class PlaylistPage extends React.Component {
 
 		// // TODO:
 		if (!this.props.queue)
-			this.playlistStore.loadTracksInPlaylist(this.state.playlistId).then(async () => {
-				const tracks = this.playlistStore.getTracksInPlaylist(this.state.playlistId);
+			this.playlistStore.loadTracksInPlaylist(this.props.match.params.playlistId).then(async () => {
+				const tracks = this.playlistStore.getTracksInPlaylist(this.props.match.params.playlistId);
 				const originalTrackOrder = [...tracks];
 				const trackPlaylistItems = this.getTrackPlaylistItems(tracks);
 
@@ -119,7 +118,7 @@ class PlaylistPage extends React.Component {
 			this.handleScroll();
 		}
 
-		this.playlistStore._isDraggingTrack.observe(change => this.setState({ isDraggingTrack: change.newValue }));
+		this.playlistStore._isDraggingTrack.observe(() => this.forceUpdate());
 
 		// const tracks = playlist;
 		// const trackPlaylistItems = this.getTrackPlaylistItems(tracks);
@@ -410,7 +409,8 @@ class PlaylistPage extends React.Component {
 	}
 
 	render() {
-		const { sortBy, sortOrder, currentOffset, playlistHeight, songsToRender, tracks, isDraggingTrack } = this.state;
+		const isDraggingTrack = this.playlistStore.isDraggingTrack;
+		const { sortBy, sortOrder, currentOffset, playlistHeight, songsToRender, tracks } = this.state;
 
 		return (
 			<div
@@ -449,7 +449,7 @@ class PlaylistPage extends React.Component {
 					{
 						songsToRender.map((currentTrackStructure, i) =>
 							<AlbumTrackRow
-								playlistUri={this.state.playlistId}
+								playlistUri={this.props.match.params.playlistId}
 								key={currentTrackStructure.id + "playlist"}
 								songs={currentTrackStructure.songs}
 							/>

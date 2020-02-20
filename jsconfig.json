@@ -8,6 +8,5 @@
 	"include": [
 		"node_modules/mobx/lib",
 		"node_modules/mobx-react/lib"
-	],
-	"javascript.implicitProjectConfig.experimentalDecorators": true
+	]
 }
