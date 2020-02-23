@@ -21,6 +21,9 @@ export default class PlaylistStore {
 	_playlists = observable.map();
 
 	@observable
+	_playlistGroups = observable.array();
+
+	@observable
 	_tracks = observable.map();
 
 	@observable
@@ -52,7 +55,111 @@ export default class PlaylistStore {
 				await Promise.all(promises);
 			}
 		} catch (err) {
-			// console.error(err);
+			console.warn(err);
+		}
+	}
+
+	@action
+	async loadPlaylistGroups() {
+		const authToken = "Bearer BQA0BBhoAxObBMu-ilgSYqD72V-8UeUYx455CNFMva-ipNcfHpW83FTvuBwbj-BIcD1kwTfVyuzs_rGE83o7t1GtdysRqysXAowdd8OMFfHDAWfhXk8ixl8bOrjYfgxtrLfhcko6zsv_2Htc4fX1L94NRnvI-ydp1MU_-ZG5EK4WAOo29kjY8Fu_32-TjXnN7hYnz9BFx6eUWmy7x9C9rYiZu18Ef8t9cQgNbV7xX9B8QQGzlIBOZliH2EWh6MKE7Dtprui0bxza1HnsPqNEigbYEzMUHA";
+
+		const response = await fetch("https://spclient.wg.spotify.com/playlist/v2/user/counterwille/rootlist?decorate=revision%2Clength%2Cattributes%2Ctimestamp%2Cowner&market=from_token", {
+			"method": "GET",
+			"headers": {
+				"cookie": "sp_t=1fba33fc38f6a113aa2ab8442b7543df",
+				"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:73.0) Gecko/20100101 Firefox/73.0",
+				"accept": "application/json",
+				"accept-language": "sv",
+				"referer": "https://spclient.wg.spotify.com/playlist/v2/user/counterwille/rootlist?decorate=revision%2Clength%2Cattributes%2Ctimestamp%2Cowner&market=from_token",
+				"authorization": authToken,
+				"app-platform": "WebPlayer",
+				"spotify-app-version": "1582330945"
+			}
+		});
+
+		const { contents: { items, } } = await response.json();
+		const groups = [];
+
+		for (let i = 0; i < items.length; i++) {
+			const { uri } = items[i];
+
+			if (uri.includes("start-group")) {
+				const group = getGroups(items, i);
+
+				if (!!group) {
+					i = group.endIndex;
+					groups.push(group);
+				}
+			}
+		}
+
+		this._playlistGroups.push(...groups);
+		console.log(groups);
+
+		function getGroups(items, startFrom, stopAtIndex) {
+			// TODO: TEMP
+			const PLAYLIST = "PLAYLIST"
+			const GROUP = "GROUP";
+
+			let startIndex = -1;
+			let endIndex = -1;
+			let groupItems = [];
+			let playlists = [];
+
+			if (!stopAtIndex)
+				stopAtIndex = items.length;
+
+			for (let i = startFrom; i < stopAtIndex; i++) {
+				const item = items[i];
+
+				if (startIndex === -1 && item.uri.includes("spotify:start-group:"))
+					startIndex = i;
+				else if (item.uri.includes("spotify:end-group:") &&
+					getGroupId(item.uri) === getGroupId(items[startIndex].uri)) {
+					endIndex = i;
+				} else if (item.uri.includes("spotify:start-group:")) {
+					const subGroupsOfGroup = getGroups(items, i, endIndex !== -1 ? endIndex : stopAtIndex);
+
+					if (!!subGroupsOfGroup)
+						groupItems.push(subGroupsOfGroup);
+				}
+			}
+
+			for (let i = startIndex; i < endIndex; i++) {
+				if (items[i].uri.includes("spotify:playlist"))
+					groupItems.push({ ...items[i], type: PLAYLIST });
+			}
+
+			if (startIndex === -1 || endIndex === -1)
+				return;
+
+			return {
+				startIndex,
+				endIndex,
+				items: groupItems,
+				uri: items[startIndex].uri,
+				name: getGroupName(items[startIndex].uri),
+				type: GROUP
+			};
+
+			function getGroupId(uri) {
+				let str = uri.replace("spotify:start-group:", "");
+				str = str.replace("spotify:end-group:", "");
+
+				const lastIndexOfColon = str.lastIndexOf(":");
+
+				if (lastIndexOfColon !== -1)
+					str = str.substring(0, lastIndexOfColon);
+
+				return str
+			}
+
+			/**
+			 * @param {String} itemUri
+			 */
+			function getGroupName(itemUri) {
+				return itemUri.substring(itemUri.lastIndexOf(":") + 1).split("+").join(" "); // fix unicode
+			}
 		}
 	}
 
@@ -70,7 +177,7 @@ export default class PlaylistStore {
 				response.tracks.items.map(track => this._tracks.set(track.track.uri, track));
 
 		} catch (err) {
-			// console.error(err);
+			console.warn(err);
 		}
 	}
 
@@ -79,14 +186,25 @@ export default class PlaylistStore {
 		return Array.from(this._playlists.values());
 	}
 
+	@computed
+	get playlistGroups() {
+		return Array.from(this._playlistGroups.values());
+	}
+
 	@action
 	async getPlaylist(playlistUri) {
-		const playlist = this._playlists.get(playlistUri);
-
-		if (!playlist)
+		if (!this._playlists.has(playlistUri))
 			await this.loadPlaylist(playlistUri);
 
 		return this._playlists.get(playlistUri);
+	}
+
+	@action
+	getOfflinePlaylist(playlistUri) {
+		if (this._playlists.has(playlistUri))
+			return this._playlists.get(playlistUri);
+		else
+			return null;
 	}
 
 	/**

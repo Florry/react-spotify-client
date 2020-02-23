@@ -6,14 +6,14 @@
 		"mobx": "^5.9.4",
 		"mobx-react": "^5.4.3",
 		"mobx-react-lite": "^1.4.0",
+		"promise-limit": "2.7.0",
 		"react": "^16.11.0",
 		"react-dom": "^16.11.0",
 		"react-router-dom": "^5.1.2",
 		"react-scripts": "3.2.0",
 		"react-virtual-list": "^2.3.0",
 		"store": "^2.0.12",
-		"uuid": "3.3.3",
-		"promise-limit": "2.7.0"
+		"uuid": "3.3.3"
 	},
 	"scripts": {
 		"start": "react-app-rewired start",

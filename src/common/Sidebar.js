@@ -2,6 +2,7 @@ import { PLAYLIST, QUEUE, PLAYLIST_REDIRECT } from "../constants/routes";
 import { inject, observer } from "mobx-react";
 import { Link } from "react-router-dom";
 import React from "react";
+import PlaylistGroup from "./sidebar/PlaylistGroup";
 
 /** @typedef {import("../stores/AuthStore").default} AuthStore */
 /** @typedef {import("../stores/PlaylistStore").default} PlaylistStore */
@@ -21,12 +22,17 @@ class Sidebar extends React.Component {
 	playerStore = this.props.playerStore;
 
 	state = {
-		searchQuery: ""
+		searchQuery: "" // Move this to the store and only return based off the query? Maybe a special "getFilteredPlaylists"
 	};
 
 	async componentDidMount() {
-		await this.playlistStore.loadPlaylistsForLoggedInUser();
+		await Promise.all([
+			this.playlistStore.loadPlaylistsForLoggedInUser(),
+			this.playlistStore.loadPlaylistGroups()
+		]);
+
 		this.forceUpdate();
+
 		this.playlistStore._isDraggingTrack.observe(() => this.forceUpdate());
 	}
 
@@ -46,8 +52,7 @@ class Sidebar extends React.Component {
 
 	render() {
 		const isDraggingTrack = this.playlistStore.isDraggingTrack;
-		const playlists = this.playlistStore.playlists;
-		const displayName = this.authStore.displayName;
+		const playlistGroups = this.playlistStore.playlistGroups;
 		const { searchQuery } = this.state;
 
 		return (
@@ -76,10 +81,7 @@ class Sidebar extends React.Component {
 				<h2>Playlists</h2>
 
 				<input
-					style={{ // TODO: TEMP
-						marginTop: 10,
-						marginBottom: 10
-					}}
+					className="filter-input"
 					onChange={e => this.updateSearch(e)}
 					value={searchQuery}
 					placeholder="filter"
@@ -95,7 +97,10 @@ class Sidebar extends React.Component {
 
 				</i>
 
-				<ul>
+				<div className="playlists">
+					{playlistGroups.map(group => <PlaylistGroup key={group.uri} groupItem={group} />)}
+				</div>
+				{/* <ul>
 					{
 						playlists.filter(playlist => playlist.name.toLowerCase().includes(searchQuery.toLowerCase())).map((playlist, i) =>
 							<li
@@ -120,7 +125,7 @@ class Sidebar extends React.Component {
 						)
 					}
 
-				</ul>
+				</ul> */}
 			</div>
 		);
 	}

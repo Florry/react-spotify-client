@@ -280,6 +280,68 @@ button:focus {
 	display: inline !important;
 }
 
+.sidebar ul.playlist-group {
+	display: block !important;
+	padding: 0;
+	margin-left: 20px;
+	border-left: 1px solid #1b1b1b;
+}
+
+.sidebar .playlists {
+	margin-left: -20px;
+}
+
+.sidebar ul.playlist-group li {
+	margin-left: 20px;
+}
+
+.sidebar-playlist-item.group:before {
+	font-family: FontAwesome;
+	font-weight: normal;
+	font-style: normal;
+	display: inline-block;
+	text-decoration: inherit;
+	content: "\f07b";
+	text-align: center;
+	font-size: 15px;
+	/* background: white; */
+	/* top: 2.5px; */
+	position: relative;
+	margin-right: 10px;
+	width: 20px;
+	height: 20px;
+	font-weight: 900;
+}
+
+.sidebar-playlist-item.group.open:before {
+	content: "\f07c";
+}
+
+.sidebar-playlist-item.group:after {
+	font-family: FontAwesome;
+	font-weight: normal;
+	font-style: normal;
+	display: inline-block;
+	text-decoration: inherit;
+	content: "";
+	text-align: center;
+	font-size: 15px;
+	/* background: white; */
+	/* top: 2.5px; */
+	margin-right: 10px;
+	width: 20px;
+	height: 20px;
+	font-weight: 900;
+	transform: rotate(-90deg);
+	position: absolute;
+	right: 0px;
+}
+
+.sidebar-playlist-item.group.open:after {
+	content: "";
+	transform: rotate(0);
+}
+
 .sidebar h2 {
 	box-sizing: border-box;
 	color: rgb(179, 179, 179);
@@ -427,7 +489,7 @@ button:focus {
 	text-size-adjust: 100%;
 	text-transform: none;
 	user-select: none;
-	width: 100%;
+	width: calc(100% - 20px);
 	height: auto;
 	margin-bottom: 10px;
 }
@@ -531,4 +593,15 @@ button:focus {
 	border-radius: 2px;
 	background: #b3b3b3;
 	height: 100%;
+}
+
+.filter-input {
+	margin-top: 10px;
+	margin-bottom: 10px;
+	background-color: #1b1b1b;
+	border: none;
+	padding: 7px;
+	margin-top: 10px;
+	margin-bottom: 10px;
+	color: #9e9f9e;
 }
