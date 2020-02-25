@@ -1,8 +1,11 @@
 import { API_ROOT, PATH_LOGGED_IN_USER_PLAYLISTS, PATH_GET_PLAYLIST_BY_ID, PATH_ADD_TRACKS_TO_PLAYLIST } from "../constants/api-constants";
-import { observable, computed, action } from "mobx";
+import { observable, computed, action, runInAction } from "mobx";
 import promiseLimit from "promise-limit";
 import APIClient from "../network/APIClient";
 import uuid from "uuid";
+import LocalStorageCache from "../cache/LocalStorageCache";
+import Utils from "../utils/Utils";
+
 
 /** @typedef {import("./RootStore").default} RootStore*/
 
@@ -29,17 +32,38 @@ export default class PlaylistStore {
 	@observable
 	_isDraggingTrack = observable.box(false);
 
+
+	@action
+	async loadPlaylistsForLoggedInUser() {
+		const cachedPlaylists = LocalStorageCache.getAllPlaylists();
+
+		if (cachedPlaylists.length > 0)
+			cachedPlaylists.forEach(playlist => {
+				if (playlist.tracks && playlist.tracks.items)
+					playlist.tracks.items = LocalStorageCache.getTracksByUris(playlist.tracks.items);
+
+				this._playlists.set(playlist.uri, playlist);
+			});
+
+		await this._fetchPlaylistsForLoggedInUser();
+	}
+
 	/**
 	 * @param {String=} next
 	 */
-	@action
-	async loadPlaylistsForLoggedInUser(next) {
+	async _fetchPlaylistsForLoggedInUser(next, offset = 0) {
 		const LIMIT = 50;
 
 		try {
 			const response = await APIClient.get(this.rootStore.stores.authStore.accessToken, next || PATH_LOGGED_IN_USER_PLAYLISTS + `?limit=${LIMIT}`);
 
-			response.items.map(playlist => this._playlists.set(playlist.uri, playlist));
+			response.items.map((playlist, i) => {
+				playlist = { ...playlist, index: offset + i };
+
+				this._playlists.set(playlist.uri, playlist);
+
+				LocalStorageCache.addPlaylist(playlist.uri, playlist);
+			});
 
 			if (response.tracks && response.tracks.items)
 				response.tracks.items.map(track => this._tracks.set(track.track.uri, track));
@@ -50,13 +74,29 @@ export default class PlaylistStore {
 				const limit = promiseLimit(10);
 
 				for (let i = 0; i < timesToFetch; i++)
-					promises.push(limit(() => this.loadPlaylistsForLoggedInUser(this._getNextString(response.next).replace(`offset=${LIMIT}`, "offset=" + ((i + 1) * LIMIT)))));
+					promises.push(
+						limit(() =>
+							this._fetchPlaylistsForLoggedInUser(this._getNextString(response.next).replace(`offset=${LIMIT}`, "offset=" + ((i + 1) * LIMIT)), (i + 1) * LIMIT)
+						));
 
 				await Promise.all(promises);
 			}
 		} catch (err) {
 			console.warn(err);
+
+			if (err.error && err.error.status === 401) {
+				await this.wait();
+				await this._fetchPlaylistsForLoggedInUser();
+			}
 		}
+	}
+
+	async wait(ms = 1000) {
+		return new Promise(resolve => {
+			setTimeout(async () => {
+				resolve();
+			}, ms);
+		});
 	}
 
 	@action
@@ -76,25 +116,33 @@ export default class PlaylistStore {
 				"spotify-app-version": "1582330945"
 			}
 		});
+		try {
+			const resp = await response.json();
 
-		const { contents: { items, } } = await response.json();
-		const groups = [];
+			if (resp.error)
+				throw resp.error;
 
-		for (let i = 0; i < items.length; i++) {
-			const { uri } = items[i];
+			const { contents: { items } } = resp;
+			const groups = [];
 
-			if (uri.includes("start-group")) {
-				const group = getGroups(items, i);
+			for (let i = 0; i < items.length; i++) {
+				const { uri } = items[i];
 
-				if (!!group) {
-					i = group.endIndex;
-					groups.push(group);
+				if (uri.includes("start-group")) {
+					const group = getGroups(items, i);
+
+					if (!!group) {
+						i = group.endIndex;
+						groups.push(group);
+					}
 				}
 			}
-		}
 
-		this._playlistGroups.push(...groups);
-		console.log(groups);
+			this._playlistGroups.push(...groups);
+			console.log(groups);
+		} catch (err) {
+			console.log(err);
+		}
 
 		function getGroups(items, startFrom, stopAtIndex) {
 			// TODO: TEMP
@@ -171,11 +219,10 @@ export default class PlaylistStore {
 
 			response.tracks.items = response.tracks.items.map(track => ({ ...track, clientId: uuid.v4() }));
 
-			this._playlists.set(response.uri, response);
-
 			if (response.tracks.items)
 				response.tracks.items.map(track => this._tracks.set(track.track.uri, track));
 
+			this._playlists.set(response.uri, response);
 		} catch (err) {
 			console.warn(err);
 		}
@@ -183,7 +230,7 @@ export default class PlaylistStore {
 
 	@computed
 	get playlists() {
-		return Array.from(this._playlists.values());
+		return Array.from(this._playlists.values()).sort(Utils.sortBy("index"));
 	}
 
 	@computed
@@ -232,6 +279,7 @@ export default class PlaylistStore {
 			response.items = response.items.map(track => ({ ...track, clientId: uuid.v4() })).filter(track => !!track.track);
 
 			response.items.map(track => this._tracks.set(track.track.uri, track));
+			response.items.map((track, i) => LocalStorageCache.addTrack(track.track.uri, { ...track, index: offset + i }));
 
 			if (!playlist.tracks.items)
 				playlist.tracks.items = [];
@@ -242,6 +290,13 @@ export default class PlaylistStore {
 			playlist.tracks.total = response.total;
 
 			this._playlists.set(playlistUri, playlist);
+			LocalStorageCache.addPlaylist(playlistUri, {
+				...playlist,
+				tracks: {
+					...playlist.tracks,
+					items: playlist.tracks.items.map(item => item.track.uri)
+				}
+			});
 
 			if (!next && response.total > response.offset && response.next !== null) {
 				const promises = [];

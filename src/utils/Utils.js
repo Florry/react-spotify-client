@@ -31,4 +31,13 @@ export default class Utils {
 		return array;
 	}
 
+	static sortBy = (propertyName) => (a, b) => {
+		if (a[propertyName] < b[propertyName])
+			return -1;
+		else if (a[propertyName] > b[propertyName])
+			return 1;
+
+		return 0;
+	}
+
 }
