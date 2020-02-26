@@ -38,8 +38,6 @@ class Sidebar extends React.Component {
 			if (this)
 				this.forceUpdate();
 		});
-
-		console.log(LocalStorageCache.getTracksByUris(["spotify:track:3L2Nyi3T7XabH8EEZFLDdX", "spotify:track:37kTASujIfZZ27NV7PfIrf"]));
 	}
 
 	async playFromPlaylist(playlistUri) {

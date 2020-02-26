@@ -32,7 +32,11 @@ export default class Utils {
 	}
 
 	static sortBy = (propertyName) => (a, b) => {
-		if (a[propertyName] < b[propertyName])
+		if (!a[propertyName])
+			return -1;
+		else if (!b[propertyName])
+			return 1;
+		else if (a[propertyName] < b[propertyName])
 			return -1;
 		else if (a[propertyName] > b[propertyName])
 			return 1;

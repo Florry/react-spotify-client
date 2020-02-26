@@ -7,6 +7,8 @@ import Utils from "../../utils/Utils";
 
 // TODO: move a lot of this code into components!
 
+// TODO: get rid of local state!
+
 // // @ts-ignore
 // const playlist = require("../../json/spotifyPlaylistSongs.json");
 // @ts-ignore
@@ -83,8 +85,8 @@ class PlaylistPage extends React.Component {
 		window.addEventListener("scroll", () => this.handleScroll());
 
 		// // TODO:
-		if (!this.props.queue)
-			this.playlistStore.loadTracksInPlaylist(this.props.match.params.playlistId).then(async () => {
+		if (!this.props.queue) {
+			const prepare = async () => {
 				const tracks = this.playlistStore.getTracksInPlaylist(this.props.match.params.playlistId);
 				const originalTrackOrder = [...tracks];
 				const trackPlaylistItems = this.getTrackPlaylistItems(tracks);
@@ -99,8 +101,18 @@ class PlaylistPage extends React.Component {
 				this.state.trackPlaylistItems.forEach((track, i) => this.getHeightBeforeTrackRow(this.state.trackPlaylistItems, i));
 
 				this.handleScroll();
-			});
-		else {
+			}
+
+			prepare().then(() => this.forceUpdate())
+				.catch(err => console.log(err));
+
+			this.playlistStore.loadTracksInPlaylist(this.props.match.params.playlistId)
+				.then(async () => {
+					prepare();
+					await this.forceUpdate();
+				})
+				.catch(err => console.log(err));
+		} else {
 			// TODO: TEMP
 			const tracks = [...this.playerStore.playQueue];
 			const originalTrackOrder = [...tracks];
@@ -119,6 +131,7 @@ class PlaylistPage extends React.Component {
 		}
 
 		this.playlistStore._isDraggingTrack.observe(() => this.forceUpdate());
+		this.playlistStore._tracks.observe(() => this.forceUpdate());
 
 		// const tracks = playlist;
 		// const trackPlaylistItems = this.getTrackPlaylistItems(tracks);
@@ -334,6 +347,8 @@ class PlaylistPage extends React.Component {
 
 		// TODO: group local songs by album
 
+		this._totalPlaytime = 0;
+
 		!!tracks && tracks.map((track, i) => {
 			const id = uuid.v4();
 
@@ -424,6 +439,12 @@ class PlaylistPage extends React.Component {
 					marginTop: "22px"
 				}}
 			>
+				<span style={{
+					color: "#fff",
+					position: "fixed",
+					zIndex: 2000,
+					backgroundColor: "#000"
+				}}>{tracks.length} songs | {Utils.durationHours(this._totalPlaytime)}</span>
 				<div>
 
 					<div className="th playlist-header">
@@ -455,7 +476,7 @@ class PlaylistPage extends React.Component {
 							/>
 						)
 					}
-					<span style={{ color: "#fff" }}>{tracks.length} songs | {Utils.durationHours(this._totalPlaytime)}</span>
+
 				</div>
 			</div>
 		);

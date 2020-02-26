@@ -18,6 +18,25 @@ export default class PlaylistStore {
 	*/
 	constructor(rootStore) {
 		this.rootStore = rootStore;
+
+		const cachedPlaylists = LocalStorageCache.getAllPlaylists();
+
+		if (cachedPlaylists.length > 0)
+			cachedPlaylists.forEach(playlist => this._playlists.set(playlist.uri, playlist));
+
+		const cachedTracks = LocalStorageCache.getAllTracks();
+
+		if (cachedTracks.length > 0)
+			cachedTracks.forEach(track => {
+				this._tracks.set(track.track.uri, track);
+			});
+
+		console.log("cachedPlaylists", JSON.parse(JSON.stringify(this.playlists)));
+		console.log("cachedTracks", cachedTracks);
+
+		window.getState = () => {
+			console.log(JSON.parse(JSON.stringify(this._playlists)));
+		}
 	}
 
 	@observable
@@ -32,19 +51,8 @@ export default class PlaylistStore {
 	@observable
 	_isDraggingTrack = observable.box(false);
 
-
 	@action
 	async loadPlaylistsForLoggedInUser() {
-		const cachedPlaylists = LocalStorageCache.getAllPlaylists();
-
-		if (cachedPlaylists.length > 0)
-			cachedPlaylists.forEach(playlist => {
-				if (playlist.tracks && playlist.tracks.items)
-					playlist.tracks.items = LocalStorageCache.getTracksByUris(playlist.tracks.items);
-
-				this._playlists.set(playlist.uri, playlist);
-			});
-
 		await this._fetchPlaylistsForLoggedInUser();
 	}
 
@@ -54,33 +62,10 @@ export default class PlaylistStore {
 	async _fetchPlaylistsForLoggedInUser(next, offset = 0) {
 		const LIMIT = 50;
 
+		let response;
+
 		try {
-			const response = await APIClient.get(this.rootStore.stores.authStore.accessToken, next || PATH_LOGGED_IN_USER_PLAYLISTS + `?limit=${LIMIT}`);
-
-			response.items.map((playlist, i) => {
-				playlist = { ...playlist, index: offset + i };
-
-				this._playlists.set(playlist.uri, playlist);
-
-				LocalStorageCache.addPlaylist(playlist.uri, playlist);
-			});
-
-			if (response.tracks && response.tracks.items)
-				response.tracks.items.map(track => this._tracks.set(track.track.uri, track));
-
-			if (!next && response.total > response.offset && response.next !== null) {
-				const promises = [];
-				const timesToFetch = Math.ceil(response.total / LIMIT);
-				const limit = promiseLimit(10);
-
-				for (let i = 0; i < timesToFetch; i++)
-					promises.push(
-						limit(() =>
-							this._fetchPlaylistsForLoggedInUser(this._getNextString(response.next).replace(`offset=${LIMIT}`, "offset=" + ((i + 1) * LIMIT)), (i + 1) * LIMIT)
-						));
-
-				await Promise.all(promises);
-			}
+			response = await APIClient.get(this.rootStore.stores.authStore.accessToken, next || PATH_LOGGED_IN_USER_PLAYLISTS + `?limit=${LIMIT}`);
 		} catch (err) {
 			console.warn(err);
 
@@ -88,7 +73,27 @@ export default class PlaylistStore {
 				await this.wait();
 				await this._fetchPlaylistsForLoggedInUser();
 			}
+
+			return;
 		}
+
+		response.items.map((playlist, i) => this._addPlaylist(playlist, offset + i));
+
+		if (!next && response.total > response.offset && response.next !== null) {
+			const promises = [];
+			const timesToFetch = Math.ceil(response.total / LIMIT);
+			const limit = promiseLimit(10);
+
+			for (let i = 0; i < timesToFetch; i++)
+				promises.push(
+					limit(() =>
+						this._fetchPlaylistsForLoggedInUser(this._getNextString(response.next).replace(`offset=${LIMIT}`, "offset=" + ((i + 1) * LIMIT)), (i + 1) * LIMIT)
+					));
+
+			await Promise.all(promises)
+				.catch(err => console.log(err));
+		}
+
 	}
 
 	async wait(ms = 1000) {
@@ -152,7 +157,6 @@ export default class PlaylistStore {
 			let startIndex = -1;
 			let endIndex = -1;
 			let groupItems = [];
-			let playlists = [];
 
 			if (!stopAtIndex)
 				stopAtIndex = items.length;
@@ -211,23 +215,6 @@ export default class PlaylistStore {
 		}
 	}
 
-	async loadPlaylist(playlistUri) {
-		const LIMIT = 50;
-
-		try {
-			const response = await APIClient.get(this.rootStore.stores.authStore.accessToken, PATH_GET_PLAYLIST_BY_ID.replace(":playlistId", playlistUri.replace("spotify:playlist:", "")));
-
-			response.tracks.items = response.tracks.items.map(track => ({ ...track, clientId: uuid.v4() }));
-
-			if (response.tracks.items)
-				response.tracks.items.map(track => this._tracks.set(track.track.uri, track));
-
-			this._playlists.set(response.uri, response);
-		} catch (err) {
-			console.warn(err);
-		}
-	}
-
 	@computed
 	get playlists() {
 		return Array.from(this._playlists.values()).sort(Utils.sortBy("index"));
@@ -239,10 +226,7 @@ export default class PlaylistStore {
 	}
 
 	@action
-	async getPlaylist(playlistUri) {
-		if (!this._playlists.has(playlistUri))
-			await this.loadPlaylist(playlistUri);
-
+	getPlaylist(playlistUri) {
 		return this._playlists.get(playlistUri);
 	}
 
@@ -261,56 +245,106 @@ export default class PlaylistStore {
 	 */
 	@action
 	async loadTracksInPlaylist(playlistUri, next, inputOffset) {
-		const LIMIT = 100;
-		const playlist = await this.getPlaylist(playlistUri);
-		const offset = inputOffset || playlist && playlist.tracks && playlist.tracks.items ? playlist.tracks.items.length : 0;
+		const tracks = [];
+		const playlist = this.getPlaylist(playlistUri);
+		let total = 0;
 
-		if (!!playlist && offset >= playlist.tracks.total)
+		const load = async (playlistUri, next, inputOffset) => {
+			const LIMIT = 100;
+			const playlist = await this.getPlaylist(playlistUri);
+			const offset = inputOffset || 0;
+
+			if (!!playlist && offset >= playlist.tracks.total)
+				return;
+
+			try {
+				let path = next || playlist.tracks.href.replace(API_ROOT, "");
+
+				if (!!offset)
+					path = path.replace("offset=0", "offset=" + offset);
+
+				const response = await APIClient.get(this.rootStore.stores.authStore.accessToken, path);
+
+				tracks.push(...response.items);
+
+				total = response.total;
+
+				if (!next && response.total > response.offset && response.next !== null) {
+					const promises = [];
+					const timesToFetch = Math.ceil(response.total / LIMIT);
+					const limit = promiseLimit(10);
+
+					for (let i = 0; i < timesToFetch; i++)
+						promises.push(limit(() => load(playlistUri, this._getNextString(response.next).replace(`offset=${LIMIT}`, "offset=" + ((i + 1 + offset) * LIMIT)), offset)));
+
+					await Promise.all(promises);
+				}
+			} catch (err) {
+				console.error(err);
+			}
+		}
+
+		await load(playlistUri, next, inputOffset);
+
+		this._addTracks(tracks);
+
+		playlist.tracks.items = [...tracks.map(item => item.track.uri)];
+
+		playlist.tracks.total = total;
+
+		this._addPlaylist(playlist);
+	}
+
+	_addTracks(tracks, offset) {
+		if (!tracks)
 			return;
 
-		try {
-			let path = next || playlist.tracks.href.replace(API_ROOT, "");
+		tracks = tracks.map(track => ({ ...track, clientId: uuid.v4() })).filter(track => !!track.track);
+		tracks.map(track => this._tracks.set(track.track.uri, track));
+		tracks.map((item, i) => LocalStorageCache.addTrack(item.track.uri, { ...item, index: offset + i }));
+	}
 
-			if (!!offset)
-				path = path.replace("offset=0", "offset=" + offset);
-
-			const response = await APIClient.get(this.rootStore.stores.authStore.accessToken, path);
-
-			response.items = response.items.map(track => ({ ...track, clientId: uuid.v4() })).filter(track => !!track.track);
-
-			response.items.map(track => this._tracks.set(track.track.uri, track));
-			response.items.map((track, i) => LocalStorageCache.addTrack(track.track.uri, { ...track, index: offset + i }));
-
-			if (!playlist.tracks.items)
-				playlist.tracks.items = [];
-
-			const trackUris = playlist.tracks.items.map(track => track.track.uri);
-
-			playlist.tracks.items.push(...response.items);
-			playlist.tracks.total = response.total;
-
-			this._playlists.set(playlistUri, playlist);
-			LocalStorageCache.addPlaylist(playlistUri, {
-				...playlist,
-				tracks: {
-					...playlist.tracks,
-					items: playlist.tracks.items.map(item => item.track.uri)
-				}
-			});
-
-			if (!next && response.total > response.offset && response.next !== null) {
-				const promises = [];
-				const timesToFetch = Math.ceil(response.total / LIMIT);
-				const limit = promiseLimit(10);
-
-				for (let i = 0; i < timesToFetch; i++)
-					promises.push(limit(() => this.loadTracksInPlaylist(playlistUri, this._getNextString(response.next).replace(`offset=${LIMIT}`, "offset=" + ((i + 1 + offset) * LIMIT)), offset)));
-
-				await Promise.all(promises);
+	@action
+	_addPlaylist(playlist, index) {
+		const items = playlist.tracks.items ? playlist.tracks.items.map(item => item.track ? item.track.uri : item) : [];
+		const statePlaylist = {
+			...playlist,
+			index: index || playlist.index,
+			tracks: {
+				...playlist.tracks,
+				items
 			}
-		} catch (err) {
-			console.error(err);
+		};
+
+		const existingStatePlaylist = this._playlists.get(playlist.uri);
+
+		if (!!existingStatePlaylist && !!existingStatePlaylist.tracks && !!existingStatePlaylist.tracks.items && !!existingStatePlaylist.tracks.items.length) {
+			statePlaylist.tracks.items = existingStatePlaylist.tracks.items;
+			statePlaylist.tracks.total = existingStatePlaylist.tracks.total;
 		}
+
+		this._playlists.set(playlist.uri, statePlaylist);
+
+		const cachePlaylist = {
+			...playlist,
+			index: index || 1,
+			tracks: {
+				...playlist.tracks,
+				items // TODO: add/remove tracks to keep in sync
+			}
+		};
+
+		const existingCache = LocalStorageCache.getPlaylist(playlist.uri);
+
+		if (!!existingCache) {
+			if (existingCache.tracks.items.length)
+				cachePlaylist.tracks.items = existingCache.tracks.items;
+
+			cachePlaylist.tracks.total = existingCache.tracks.total;
+			cachePlaylist.index = index !== undefined ? index : existingCache.index;
+		}
+
+		LocalStorageCache.addPlaylist(playlist.uri, cachePlaylist);
 	}
 
 	@computed
@@ -320,7 +354,31 @@ export default class PlaylistStore {
 
 	@action
 	getTracksInPlaylist(playlistUri) {
-		return !!this._playlists.size ? this._playlists.get(playlistUri).tracks.items : [];
+		if (!this._playlists.size)
+			return [];
+		else {
+			const playlistInQuestion = this._playlists.get(playlistUri);
+
+			if (playlistInQuestion.tracks.items)
+				return this.getTracksByUris(playlistInQuestion.tracks.items);
+		}
+
+		return [];
+	}
+
+	@action
+	getTrack(trackUri) {
+		return this._tracks.get(trackUri);
+	}
+
+	@action
+	getTracksByUris(trackUris) {
+		const output = [];
+
+		for (const uri of trackUris)
+			output.push(this.getTrack(uri));
+
+		return output;
 	}
 
 	_getNextString(next) {
