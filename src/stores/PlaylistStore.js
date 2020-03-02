@@ -251,7 +251,7 @@ export default class PlaylistStore {
 
 		const load = async (playlistUri, next, inputOffset) => {
 			const LIMIT = 100;
-			const playlist = await this.getPlaylist(playlistUri);
+			const playlist = this.getPlaylist(playlistUri);
 			const offset = inputOffset || 0;
 
 			if (!!playlist && offset >= playlist.tracks.total)

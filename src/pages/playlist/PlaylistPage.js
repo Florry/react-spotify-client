@@ -132,6 +132,7 @@ class PlaylistPage extends React.Component {
 
 		this.playlistStore._isDraggingTrack.observe(() => this.forceUpdate());
 		this.playlistStore._tracks.observe(() => this.forceUpdate());
+		this.playlistStore._playlists.observe(() => this.forceUpdate());
 
 		// const tracks = playlist;
 		// const trackPlaylistItems = this.getTrackPlaylistItems(tracks);
