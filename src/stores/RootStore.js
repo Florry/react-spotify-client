@@ -2,10 +2,13 @@ import { createContext } from "react";
 import PlaylistStore from "./PlaylistStore";
 import PlayerStore from "./PlayerStore";
 import AuthStore from "./AuthStore";
+import WsClient from "../network/WsClient";
+
 
 class RootStore {
 
 	constructor() {
+		this.wsClient = new WsClient();
 		this.stores = {
 			authStore: new AuthStore(this),
 			playlistStore: new PlaylistStore(this),

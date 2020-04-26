@@ -84,37 +84,10 @@ class PlaylistPage extends React.Component {
 	async componentDidMount() {
 		window.addEventListener("scroll", () => this.handleScroll());
 
-		// // TODO:
-		if (!this.props.queue) {
-			const prepare = async () => {
-				const tracks = this.playlistStore.getTracksInPlaylist(this.props.match.params.playlistId);
-				const originalTrackOrder = [...tracks];
-				const trackPlaylistItems = this.getTrackPlaylistItems(tracks);
-
-				await this.setState({
-					originalTrackOrder,
-					tracks,
-					trackPlaylistItems,
-					...this.getUpdatedState()
-				});
-
-				this.state.trackPlaylistItems.forEach((track, i) => this.getHeightBeforeTrackRow(this.state.trackPlaylistItems, i));
-
-				this.handleScroll();
-			}
-
-			prepare().then(() => this.forceUpdate())
-				.catch(err => console.log(err));
-
-			this.playlistStore.loadTracksInPlaylist(this.props.match.params.playlistId)
-				.then(async () => {
-					prepare();
-					await this.forceUpdate();
-				})
-				.catch(err => console.log(err));
-		} else {
-			// TODO: TEMP
-			const tracks = [...this.playerStore.playQueue];
+		// // // TODO:
+		// if (!this.props.queue) {
+		const prepare = async () => {
+			const tracks = this.playlistStore.getTracksInPlaylist(this.props.match.params.playlistId);
 			const originalTrackOrder = [...tracks];
 			const trackPlaylistItems = this.getTrackPlaylistItems(tracks);
 
@@ -129,6 +102,30 @@ class PlaylistPage extends React.Component {
 
 			this.handleScroll();
 		}
+
+		this.playlistStore.loadTracksInPlaylist(this.props.match.params.playlistId)
+			.then(async () => {
+				prepare();
+				await this.forceUpdate();
+			})
+			.catch(err => console.log(err));
+		// } else {
+		// 	// TODO: TEMP
+		// 	const tracks = [...this.playerStore.playQueue];
+		// 	const originalTrackOrder = [...tracks];
+		// 	const trackPlaylistItems = this.getTrackPlaylistItems(tracks);
+
+		// 	await this.setState({
+		// 		originalTrackOrder,
+		// 		tracks,
+		// 		trackPlaylistItems,
+		// 		...this.getUpdatedState()
+		// 	});
+
+		// 	this.state.trackPlaylistItems.forEach((track, i) => this.getHeightBeforeTrackRow(this.state.trackPlaylistItems, i));
+
+		// 	this.handleScroll();
+		// }
 
 		this.playlistStore._isDraggingTrack.observe(() => this.forceUpdate());
 		this.playlistStore._tracks.observe(() => this.forceUpdate());

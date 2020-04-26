@@ -79,7 +79,7 @@ class AlbumTrackRow extends React.Component {
 					</div>
 				);
 			else {
-				const { added_at: added, clientId } = song;
+				const { added_at: added, id } = song;
 				const {
 					name,
 					uri,
@@ -114,7 +114,7 @@ class AlbumTrackRow extends React.Component {
 				rows.push(
 					<DraggableTrack
 						uri={uri}
-						key={clientId + "-album-track-row-"}
+						key={id + "-album-track-row-"}
 						className={`
 						tr
 						${!!songs[i - 1] && songs[i - 1].track.disc_number !== discNumber ? "cd-divider" : ""}

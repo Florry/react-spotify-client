@@ -15,10 +15,12 @@ class HttpClient {
 	}
 
     /**
+     * @param {String} accessToken
      * @param {String} path
+     * @param {Boolean} fullPath
      */
-	get(accessToken, path) {
-		return this._request("GET", accessToken, path, null);
+	get(accessToken, path, fullPath = false) {
+		return this._request("GET", accessToken, path, null, fullPath);
 	}
 
     /**
@@ -74,7 +76,8 @@ class HttpClient {
 				responseBody = await response.json();
 			} catch (err) { }
 
-			if (response.status === 401 && responseBody && responseBody.error && responseBody.error.message === "The access token expired") {
+			if ((response.status === 401 && responseBody && responseBody.error && responseBody.error.message === "The access token expired") ||
+				(responseBody.error && responseBody.error.status === 401 && responseBody && responseBody.error && responseBody.error.message === "The access token expired")) {
 				localStorage.removeItem("accessToken");
 				window.location.href = "";
 			}
