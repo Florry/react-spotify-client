@@ -1,5 +1,6 @@
 import { observable, computed, action } from "mobx";
-import { API_LOGIN_URI } from "../constants/api-constants";
+import { API_LOGIN_URI, SERVER_API_ROOT } from "../constants/api-constants";
+import APIClient from "../network/APIClient";
 
 /** @typedef {import("./RootStore").default} RootStore*/
 
@@ -30,9 +31,11 @@ export default class AuthStore {
 	 * @param {String} accessToken
 	*/
 	@action
-	setAccessToken(accessToken) {
+	async setAccessToken(accessToken) {
 		this._accessToken = accessToken;
 		this.persistAccessToken(accessToken);
+
+		const response = await APIClient.post(this.rootStore.stores.authStore.accessToken, `${SERVER_API_ROOT}/access-token`, null, true);
 	}
 
 	_getPersistedAccessToken() {

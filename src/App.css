@@ -194,6 +194,17 @@ td:hover {
 	border-top: 1px solid #222;
 }
 
+.tr:hover {
+	/* TODO: TEMP */
+	background-color: #252525;
+}
+
+.td-artist:hover, .td-album:hover, .album-td .album-art {
+	/* TODO: TEMP */
+	text-decoration: underline;
+	cursor: pointer;
+}
+
 .cd-divider {
 	border-top: 1px solid #313131;
 }

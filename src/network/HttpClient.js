@@ -27,8 +27,8 @@ class HttpClient {
      * @param {String} path
      * @param {Object=} body
      */
-	post(accessToken, path, body) {
-		return this._request("POST", accessToken, path, body);
+	post(accessToken, path, body, fullPath = false) {
+		return this._request("POST", accessToken, path, body, fullPath);
 	}
 
     /**

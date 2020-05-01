@@ -14,17 +14,21 @@ class GetAuthToken extends React.Component {
 	state = { shouldRedirect: false };
 
 	componentDidMount() {
-		const hashComponents = window.location.hash.replace("#", "").split("&");
+		const hashComponents = window.location.search.split("?");
 		const hashKeyValue = {};
+
+		console.log(hashComponents);
 
 		hashComponents.forEach(component => {
 			const decodedComponent = decodeURIComponent(component);
 			const parts = decodedComponent.split("=");
+
 			hashKeyValue[parts[0]] = parts[1];
 		});
 
 		if (!hashKeyValue.error) {
-			this.authStore.setAccessToken(hashKeyValue.access_token);
+			// TODO:
+			this.authStore.setAccessToken(hashKeyValue.code.replace("&state", ""));
 
 			this.setState({ shouldRedirect: true });
 		}

@@ -38,4 +38,19 @@ export const PATH_GET_PLAYLIST_BY_ID = "playlists/:playlistId";
 export const PATH_MULTIPLE_TRACKS = "tracks";
 export const PATH_ADD_TRACKS_TO_PLAYLIST = "playlists/:playlistId/tracks";
 
-export const API_LOGIN_URI = encodeURI(`${API_ROOT_ACCOUNTS}/${PATH_AUTORIZE}?client_id=${API_CLIENT_ID}&scope=${API_SCOPES.join(" ")}&response_type=token&redirect_uri=http://localhost:3000/spotify-api-calllback`);
+// TODO:
+var generateRandomString = function (length) {
+	var text = '';
+	var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+	for (var i = 0; i < length; i++) {
+		text += possible.charAt(Math.floor(Math.random() * possible.length));
+	}
+	return text;
+};
+
+var state = generateRandomString(16);
+
+export const API_LOGIN_URI = encodeURI(`${API_ROOT_ACCOUNTS}/${PATH_AUTORIZE}?client_id=${API_CLIENT_ID}&scope=${API_SCOPES.join(" ")}&response_type=code&state=${state}&redirect_uri=http://localhost:3000/spotify-api-calllback`);
+
+export const SERVER_API_ROOT = "http://localhost:8080";

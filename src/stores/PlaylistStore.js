@@ -1,4 +1,4 @@
-import { API_ROOT, PATH_LOGGED_IN_USER_PLAYLISTS, PATH_GET_PLAYLIST_BY_ID, PATH_ADD_TRACKS_TO_PLAYLIST } from "../constants/api-constants";
+import { API_ROOT, PATH_LOGGED_IN_USER_PLAYLISTS, PATH_GET_PLAYLIST_BY_ID, PATH_ADD_TRACKS_TO_PLAYLIST, SERVER_API_ROOT } from "../constants/api-constants";
 import { observable, computed, action, runInAction } from "mobx";
 import promiseLimit from "promise-limit";
 import APIClient from "../network/APIClient";
@@ -6,7 +6,7 @@ import uuid from "uuid";
 import LocalStorageCache from "../cache/LocalStorageCache";
 import Utils from "../utils/Utils";
 
-const SERVER_API_ROOT = "http://localhost:8080";
+
 
 /** @typedef {import("./RootStore").default} RootStore*/
 
@@ -256,7 +256,6 @@ export default class PlaylistStore {
 		playlistUri = playlistUri.replace("spotify:playlist:", "");
 
 		// TODO: Get playlist if it doesn't exist (i.e do not wait for it to be loaded with the logged in user's playlists)
-		// TODO: Obviously do not hard code url here
 		if (!!playlist && playlist.tracks.items.length !== playlist.tracks.total) {
 			const response = await APIClient.get(this.rootStore.stores.authStore.accessToken, `${SERVER_API_ROOT}/playlist/${playlistUri}`, true);
 

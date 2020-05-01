@@ -1,5 +1,5 @@
-import { Db } from "mongodb";
 import Cache from "./Cache";
+import { Db } from "mongodb";
 
 export default class PlaylistCache extends Cache {
 

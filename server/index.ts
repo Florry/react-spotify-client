@@ -5,12 +5,14 @@ import * as mongodb from "mongodb";
 import * as WebSocket from "ws";
 import PlaylistCache from "./cache/PlaylistCache";
 import PlaylistsCache from "./cache/PlaylistsCache";
+import AuthCache from "./cache/AuthCache";
 import SpotifyApiClient from "./network/SpotifyApiClient";
 import GetPlaylistHandler from "./handlers/GetPlaylistHandler";
 import GetPlaylistForLoggedInUserHandler from "./handlers/GetPlaylistForLoggedInUserHandler";
 import getToken from "./middleware/getToken";
 import { ServerRequest } from "./interfaces/ServerRequest";
 import WebsocketResponse from "./network/WebsockeResponse";
+import SaveAccessToken from "./handlers/SaveAccessToken";
 
 const cors = require("cors");
 const compression = require("compression");
@@ -40,17 +42,23 @@ async function registerEndpoints() {
 	const db = await mongodb.connect("mongodb://localhost:27017/spotify-client");
 	const playlistCache = new PlaylistCache(db);
 	const playlistsCache = new PlaylistsCache(db);
-	const spotifyApiClient = new SpotifyApiClient(playlistCache, playlistsCache);
+	const authCache = new AuthCache(db);
+
+	const spotifyApiClient = new SpotifyApiClient(playlistCache, playlistsCache, authCache);
 	const getPlaylist = new GetPlaylistHandler(playlistCache, spotifyApiClient);
 	const getPlaylistForLoggedInUserHandler = new GetPlaylistForLoggedInUserHandler(playlistsCache, spotifyApiClient);
+	const saveAccessToken = new SaveAccessToken(authCache, spotifyApiClient);
 
 	app.get("/playlist", (request, response) => getPlaylistForLoggedInUserHandler.handle(request as ServerRequest, response));
 	app.get("/playlist/:playlistId", (request, response) => getPlaylist.handle(request as ServerRequest, response));
+	app.post("/access-token", (request, response) => saveAccessToken.handle(request as ServerRequest, response));
 
 	ws.get("/playlist", (request, response) => getPlaylistForLoggedInUserHandler.handle(request as ServerRequest, response));
 	ws.get("/playlist/:playlistId", (request, response) => getPlaylist.handle(request as ServerRequest, response));
+	ws.post("/access-token", (request, response) => saveAccessToken.handle(request as ServerRequest, response));
 }
 
+// TODO: Move to its own file
 const wsS = new WebSocket.Server({ server });
 
 wsS.on("connection", (ws: WebSocket) => {
