@@ -1,12 +1,8 @@
-import { API_ROOT, PATH_LOGGED_IN_USER_PLAYLISTS, PATH_GET_PLAYLIST_BY_ID, PATH_ADD_TRACKS_TO_PLAYLIST, SERVER_API_ROOT } from "../constants/api-constants";
-import { observable, computed, action, runInAction } from "mobx";
-import promiseLimit from "promise-limit";
+import { API_ROOT, PATH_ADD_TRACKS_TO_PLAYLIST, SERVER_API_ROOT } from "../constants/api-constants";
+import { observable, computed, action } from "mobx";
 import APIClient from "../network/APIClient";
-import uuid from "uuid";
 import LocalStorageCache from "../cache/LocalStorageCache";
 import Utils from "../utils/Utils";
-
-
 
 /** @typedef {import("./RootStore").default} RootStore*/
 
@@ -95,11 +91,12 @@ export default class PlaylistStore {
 		// 		.catch(err => console.log(err));
 		// }
 
-		const response = await APIClient.get(this.rootStore.stores.authStore.accessToken, `${SERVER_API_ROOT}/playlist`, true);
+		const response = await APIClient.get(await this.rootStore.stores.authStore.getAccessToken(), `${SERVER_API_ROOT}/playlist`, true);
 
 		console.log("response", response);
 
-		response.map((playlist, i) => this._addPlaylist(playlist, i));
+		if (!!response && !!response.map)
+			response.map((playlist, i) => this._addPlaylist(playlist, i));
 	}
 
 	async wait(ms = 1000) {
@@ -150,6 +147,7 @@ export default class PlaylistStore {
 			}
 
 			this._playlistGroups.push(...groups);
+
 			console.log(groups);
 		} catch (err) {
 			console.log(err);
@@ -251,18 +249,21 @@ export default class PlaylistStore {
 	 */
 	@action
 	async loadTracksInPlaylist(playlistUri, next, inputOffset) {
-		const playlist = this.getPlaylist(playlistUri);
+		let playlist = this.getPlaylist(playlistUri);
+
+		if (playlist && playlist.tracks && playlist.tracks.items && playlist.tracks.items.length > 0)
+			return;
 
 		playlistUri = playlistUri.replace("spotify:playlist:", "");
 
-		// TODO: Get playlist if it doesn't exist (i.e do not wait for it to be loaded with the logged in user's playlists)
-		if (!!playlist && playlist.tracks.items.length !== playlist.tracks.total) {
-			const response = await APIClient.get(this.rootStore.stores.authStore.accessToken, `${SERVER_API_ROOT}/playlist/${playlistUri}`, true);
+		const response = await APIClient.get(await this.rootStore.stores.authStore.getAccessToken(), `${SERVER_API_ROOT}/playlist/${playlistUri}`, true);
 
-			this._addTracks(response.tracks.items);
+		if (!playlist)
+			playlist = response;
 
-			console.log(response);
+		this._addTracks(response.tracks.items);
 
+		if (!!playlist.tracks && !!playlist.tracks.items && !!response.tracks && !!response.tracks.items) {
 			playlist.tracks.items = [...response.tracks.items.map(item => item.track.uri)];
 
 			playlist.tracks.total = response.tracks.total;
@@ -335,7 +336,7 @@ export default class PlaylistStore {
 		else {
 			const playlistInQuestion = this._playlists.get(playlistUri);
 
-			if (playlistInQuestion.tracks.items)
+			if (playlistInQuestion && playlistInQuestion.tracks && playlistInQuestion.tracks.items)
 				return this.getTracksByUris(playlistInQuestion.tracks.items);
 		}
 
@@ -376,56 +377,11 @@ export default class PlaylistStore {
 	 * @param {Array<String>} tracks
 	 */
 	@action
-	addTracksToPlaylist(playlistUri, tracks) {
+	async addTracksToPlaylist(playlistUri, tracks) {
 		const urisQuery = tracks.join(",");
 		const path = `${PATH_ADD_TRACKS_TO_PLAYLIST.replace(":playlistId", playlistUri.replace("spotify:playlist:", ""))}?uris=${urisQuery}`;
-		APIClient.post(this.rootStore.stores.authStore.accessToken, path);
+
+		APIClient.post(await this.rootStore.stores.authStore.getAccessToken(), path);
 	}
 
 }
-
-// {
-// 	"collaborative": true,
-// 	"external_urls": {
-// 	  "spotify": "https://open.spotify.com/playlist/5n924GIq60au831cuAWRgS"
-// 	},
-// 	"href": "https://api.spotify.com/v1/playlists/5n924GIq60au831cuAWRgS",
-// 	"id": "5n924GIq60au831cuAWRgS",
-// 	"images": [
-// 	  {
-// 		"height": 640,
-// 		"url": "https://mosaic.scdn.co/640/ab67616d0000b273075c66063f45f0d2b61ccff2ab67616d0000b273a816fb15d9f12a9f88fc9d17ab67616d0000b273e1f5ee370c7f0688de3bb3c4ab67616d0000b273f1814f1b76df2fa196e4f45e",
-// 		"width": 640
-// 	  },
-// 	  {
-// 		"height": 300,
-// 		"url": "https://mosaic.scdn.co/300/ab67616d0000b273075c66063f45f0d2b61ccff2ab67616d0000b273a816fb15d9f12a9f88fc9d17ab67616d0000b273e1f5ee370c7f0688de3bb3c4ab67616d0000b273f1814f1b76df2fa196e4f45e",
-// 		"width": 300
-// 	  },
-// 	  {
-// 		"height": 60,
-// 		"url": "https://mosaic.scdn.co/60/ab67616d0000b273075c66063f45f0d2b61ccff2ab67616d0000b273a816fb15d9f12a9f88fc9d17ab67616d0000b273e1f5ee370c7f0688de3bb3c4ab67616d0000b273f1814f1b76df2fa196e4f45e",
-// 		"width": 60
-// 	  }
-// 	],
-// 	"name": "Eftermiddag på jobbet 💃",
-// 	"owner": {
-// 	  "display_name": "carolinahildings",
-// 	  "external_urls": {
-// 		"spotify": "https://open.spotify.com/user/carolinahildings"
-// 	  },
-// 	  "href": "https://api.spotify.com/v1/users/carolinahildings",
-// 	  "id": "carolinahildings",
-// 	  "type": "user",
-// 	  "uri": "spotify:user:carolinahildings"
-// 	},
-// 	"primary_color": null,
-// 	"public": false,
-// 	"snapshot_id": "NjksMDEyMzk5NDIwMjNhNzk2NjE4OTI2ZGYwMDNhOWJkYzhjZjU5YjJjYw==",
-// 	"tracks": {
-// 	  "href": "https://api.spotify.com/v1/playlists/5n924GIq60au831cuAWRgS/tracks",
-// 	  "total": 65
-// 	},
-// 	"type": "playlist",
-// 	"uri": "spotify:playlist:5n924GIq60au831cuAWRgS"
-//   }

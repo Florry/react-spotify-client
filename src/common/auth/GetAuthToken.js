@@ -2,6 +2,8 @@ import { PLAYLIST } from "../../constants/routes";
 import { Redirect } from "react-router-dom";
 import { inject } from "mobx-react";
 import React from "react";
+import queryString from "query-string";
+
 
 /** @typedef {import("../../stores/AuthStore").default} AuthStore */
 
@@ -14,21 +16,11 @@ class GetAuthToken extends React.Component {
 	state = { shouldRedirect: false };
 
 	componentDidMount() {
-		const hashComponents = window.location.search.split("?");
-		const hashKeyValue = {};
+		const query = queryString.parse(window.location.search);
 
-		console.log(hashComponents);
-
-		hashComponents.forEach(component => {
-			const decodedComponent = decodeURIComponent(component);
-			const parts = decodedComponent.split("=");
-
-			hashKeyValue[parts[0]] = parts[1];
-		});
-
-		if (!hashKeyValue.error) {
+		if (!query.error) {
 			// TODO:
-			this.authStore.setAccessToken(hashKeyValue.code.replace("&state", ""));
+			this.authStore.setAccessToken(query.code);
 
 			this.setState({ shouldRedirect: true });
 		}

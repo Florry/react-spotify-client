@@ -8,7 +8,7 @@ export default class SaveAccessToken {
 	constructor(private authCache: AuthCache, private spotifyClient: SpotifyApiClient) { }
 
 	async handle(request: ServerRequest, response: Response) {
-		const accessToken = request.accessToken;
+		const accessToken = request.body.accessToken;
 		const spotifyResponse = await this.spotifyClient.getAuthToken(accessToken);
 
 		// TODO:

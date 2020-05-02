@@ -15,6 +15,7 @@ interface AccessToken {
 	refreshToken: string;
 	expiresIn: Date;
 	scope: string;
+	expiresInSeconds: number;
 }
 
 // TODO: handle errors
@@ -28,8 +29,11 @@ export default class SpotifyApiClient {
 		this.httpClient = new HttpClient(API_ROOT);
 	}
 
-	async getPlaylist(accessToken2, playlistUri, next?: string, inputOffset?: number) {
+	async getPlaylist(accessToken2: string, playlistUri: string, next?: string, inputOffset?: number) {
 		const accessToken = await this.getAccessToken();
+
+		if (!accessToken)
+			return null;
 
 		const tracks = [];
 
@@ -79,8 +83,6 @@ export default class SpotifyApiClient {
 
 		await load(playlistUri, next, inputOffset);
 
-		// this._addTracks(tracks);
-
 		if (!playlist.tracks)
 			playlist = {
 				tracks: {
@@ -93,15 +95,17 @@ export default class SpotifyApiClient {
 
 		playlist.tracks.total = total;
 
-		// TODO: bulk add
 		if (!playlist.error)
 			await this.addPlaylist(playlistUri, playlist);
 
 		return playlist;
 	}
 
-	async getPlaylistsForLoggedInUser(accessToken: string, next?: string, offset?: number, fetchedPlaylists?: any[]) {
-		// const accessToken = await this.getAccessToken();
+	async getPlaylistsForLoggedInUser(accessToken2: string, next?: string, offset?: number, fetchedPlaylists?: any[]) {
+		const accessToken = await this.getAccessToken();
+
+		if (!accessToken)
+			return null;
 
 		if (!offset)
 			offset = 0;
@@ -135,9 +139,8 @@ export default class SpotifyApiClient {
 				.catch(err => console.log(err));
 		}
 
-		// TODO: bulk add
 		if (!response.error)
-			playlists.forEach((playlist, i) => this.addSidebarPlaylist(playlist.uri?.replace("spotify:playlist:", ""), { ...playlist, index: offset + i }));
+			await this.addSidebarPlaylists(playlists, offset);
 
 		return playlists;
 	}
@@ -151,21 +154,16 @@ export default class SpotifyApiClient {
 	}
 
 	private async addPlaylist(playlistUri: string, playlist) {
-		// TODO: BULK ADD
 		const existingPlaylist = await this.playlistCache.get(playlistUri);
 
 		if (!existingPlaylist)
 			await this.playlistCache.put(playlistUri, playlist);
 	}
 
-	private async addSidebarPlaylist(playlistUri: string, playlist) {
-		// TODO: BULK ADD
-		new Promise(async () => {
-			const existingPlaylist = await this.playlistsCache.get(playlistUri);
+	private async addSidebarPlaylists(playlists: any[], offset: number) {
+		playlists = playlists.map((playlist, i) => ({ ...playlist, uri: playlist.uri?.replace("spotify:playlist:", ""), index: offset + i }));
 
-			if (!existingPlaylist)
-				await this.playlistsCache.put(playlistUri, playlist);
-		});
+		await this.playlistsCache.putMany(playlists);
 	}
 
 	async getAuthToken(code) {
@@ -185,14 +183,19 @@ export default class SpotifyApiClient {
 			};
 
 			// TODO: use HttpClient
-			request.post(authOptions, (error, response, body) => {
+			request.post(authOptions, async (error, response, body) => {
 				// TODO: handle error
 				this.accessToken = {
 					accessToken: body.access_token,
 					refreshToken: body.refresh_token,
 					expiresIn: new Date(Date.now() + (body.expires_in * 1000)),
-					scope: body.scope
+					scope: body.scope,
+					expiresInSeconds: body.expires_in
 				};
+
+				await this.authCache.put("accessToken", {
+					...this.accessToken
+				});
 
 				resolve(this.accessToken);
 			});
@@ -200,6 +203,8 @@ export default class SpotifyApiClient {
 	}
 
 	refreshToken(refreshToken) {
+		console.log("refreshing token");
+
 		return new Promise(resolve => {
 			const CLIENT_ID = "e3ab4c22331045f0b7f6e57235b58b47";
 			const CLIENT_SECRET = "4bcbb1592baf40548afae22c726df549";
@@ -219,7 +224,12 @@ export default class SpotifyApiClient {
 			request.post(authOptions, async (error, response, body) => {
 				const accessTokenFromDb = await this.authCache.get("accessToken");
 				// TODO:
-				await this.authCache.put("accessToken", { ...accessTokenFromDb, acessToken: body.access_token, expiresIn: new Date(Date.now() + (body.expires_in * 1000)) });
+				await this.authCache.put("accessToken", {
+					...accessTokenFromDb,
+					acessToken: body.access_token,
+					expiresIn: new Date(Date.now() + (body.expires_in * 1000)),
+					expiresInSeconds: body.expires_in
+				});
 				// TODO: handle error
 				resolve({
 					accessToken: body.access_token
@@ -232,13 +242,12 @@ export default class SpotifyApiClient {
 		if (!this.accessToken) {
 			const accessToken = await this.authCache.get("accessToken");
 
-			if (accessToken)
+			if (!!accessToken)
 				this.accessToken = accessToken;
-		}
 
-		console.log("\n");
-		console.log(require("util").inspect(new Date() > this.accessToken.expiresIn, null, null, true));
-		console.log("\n");
+			if (!this.accessToken)
+				return null;
+		}
 
 		if (new Date() > this.accessToken.expiresIn)
 			await this.refreshToken(this.accessToken.refreshToken);

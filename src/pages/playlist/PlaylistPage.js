@@ -2,24 +2,7 @@ import { inject, observer } from "mobx-react";
 import AlbumTrackRow from "../../common/AlbumTrackRow";
 import React from "react";
 import uuid from "uuid";
-import DraggableTrack from "../../common/DraggableTrack";
 import Utils from "../../utils/Utils";
-
-// TODO: move a lot of this code into components!
-
-// TODO: get rid of local state!
-
-// // @ts-ignore
-// const playlist = require("../../json/spotifyPlaylistSongs.json");
-// @ts-ignore
-// const playlist = require("../../json/mock-playlist.json");
-// // @ts-ignore
-// const metadata = require("../../json/spotifyMetadata.json");
-
-// metadata.metadata = metadata.metadata.map(m => {
-// 	m.artistsString = m.artists.map(artist => artist.name).join(",")
-// 	return m;
-// });
 
 // TODO: temp
 const TITLES = {
@@ -106,7 +89,8 @@ class PlaylistPage extends React.Component {
 		this.playlistStore.loadTracksInPlaylist(this.props.match.params.playlistId)
 			.then(async () => {
 				prepare();
-				await this.forceUpdate();
+				// await this.forceUpdate();
+				this.handleScroll();
 			})
 			.catch(err => console.log(err));
 		// } else {
@@ -127,9 +111,7 @@ class PlaylistPage extends React.Component {
 		// 	this.handleScroll();
 		// }
 
-		this.playlistStore._isDraggingTrack.observe(() => this.forceUpdate());
-		this.playlistStore._tracks.observe(() => this.forceUpdate());
-		this.playlistStore._playlists.observe(() => this.forceUpdate());
+
 
 		// const tracks = playlist;
 		// const trackPlaylistItems = this.getTrackPlaylistItems(tracks);
@@ -145,6 +127,11 @@ class PlaylistPage extends React.Component {
 		// 	trackPlaylistItems,
 		// 	...this.getUpdatedState()
 		// });
+
+		//TODO: investigate
+		this.playlistStore._isDraggingTrack.observe(() => this.forceUpdate());
+		// this.playlistStore._tracks.observe(() => this.forceUpdate());
+		// this.playlistStore._playlists.observe(() => this.forceUpdate());
 	}
 
 	componentWillUnmount() {
@@ -264,21 +251,23 @@ class PlaylistPage extends React.Component {
 		// this.handleScroll();
 	}
 
+	lastScroll = null;
+
 	handleScroll(e) {
 		this.setState(this.getUpdatedState());
 	}
 
 	getUpdatedState() {
-		const getHeightForNextTenTracks = (inputI) => {
-			if (!!this._nextTenHeightCache[inputI])
-				return this._nextTenHeightCache[inputI];
+		const getHeightForNextTenTracks = (index) => {
+			if (!!this._nextTenHeightCache[index])
+				return this._nextTenHeightCache[index];
 
 			let height = 0;
 
 			for (let i = 0; i < 10; i++)
-				height += this.getHeightOfTrack(trackPlaylistItems[inputI + i]);
+				height += this.getHeightOfTrack(trackPlaylistItems[index + i]);
 
-			this._nextTenHeightCache[inputI] = height;
+			this._nextTenHeightCache[index] = height;
 
 			return height;
 		};
@@ -458,6 +447,7 @@ class PlaylistPage extends React.Component {
 
 				</div>
 
+				{/* TODO: Position absolute? */}
 				<div style={{
 					paddingTop: currentOffset,
 					overflow: "hidden",
@@ -469,7 +459,7 @@ class PlaylistPage extends React.Component {
 						songsToRender.map((currentTrackStructure, i) =>
 							<AlbumTrackRow
 								playlistUri={this.props.match.params.playlistId}
-								key={currentTrackStructure.id + "playlist"}
+								key={currentTrackStructure.id}
 								songs={currentTrackStructure.songs}
 							/>
 						)

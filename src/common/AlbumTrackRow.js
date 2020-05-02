@@ -2,9 +2,7 @@ import { inject, observer } from "mobx-react";
 import React from "react";
 import Utils from "../utils/Utils";
 import DraggableTrack from "./DraggableTrack";
-
-// @ts-ignore
-const starredSongs = require("../json/spotifyStarred.json");
+import { STARRED_PLAYLIST_ID } from "../constants/api-constants";
 
 /** @typedef {import("../stores/PlayerStore").default} PlayerStore */
 /** @typedef {import("../stores/PlaylistStore").default} PlaylistStore */
@@ -40,6 +38,13 @@ class AlbumTrackRow extends React.Component {
 	render() {
 		const { songs: inputSongs, playlistUri } = this.props;
 		const songs = [...inputSongs];
+
+		let starredSongs = this.playlistStore.getPlaylist(STARRED_PLAYLIST_ID);
+
+		if (!starredSongs)
+			starredSongs = [];
+		else
+			starredSongs = starredSongs.tracks.items;
 
 		songs.sort((a, b) => {
 			// TODO: If we sort by CUSTOM this shouldn't be sorted!
@@ -107,7 +112,7 @@ class AlbumTrackRow extends React.Component {
 				});
 
 				const artistsString = artists.map(artist => artist.name).join(",")
-				const isStarred = !!songs[i] && starredSongs.starred.includes(songs[i].track.uri); // TODO: songs[i] is not sorted? 🤔
+				const isStarred = !!songs[i] && starredSongs.includes(songs[i].track.uri); // TODO: songs[i] is not sorted? 🤔
 
 				const songUnplayable = !playable || !!isLocal;
 
@@ -141,6 +146,7 @@ class AlbumTrackRow extends React.Component {
 									style={{
 										backgroundImage: albumCover ? `url(${albumCover}?url=https://github.com/Florry)` : "url(../images/no-cover-art.png)"
 									}}
+									title={album.name}
 									className={i === 0
 										? (songs.length === 1
 											? "album-art single-song"

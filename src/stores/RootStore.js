@@ -3,6 +3,7 @@ import PlaylistStore from "./PlaylistStore";
 import PlayerStore from "./PlayerStore";
 import AuthStore from "./AuthStore";
 import WsClient from "../network/WsClient";
+import APIClient from "../network/APIClient";
 
 
 class RootStore {

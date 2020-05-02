@@ -54,3 +54,7 @@ var state = generateRandomString(16);
 export const API_LOGIN_URI = encodeURI(`${API_ROOT_ACCOUNTS}/${PATH_AUTORIZE}?client_id=${API_CLIENT_ID}&scope=${API_SCOPES.join(" ")}&response_type=code&state=${state}&redirect_uri=http://localhost:3000/spotify-api-calllback`);
 
 export const SERVER_API_ROOT = "http://localhost:8080";
+
+
+// TODO:
+export const STARRED_PLAYLIST_ID = "spotify:playlist:2GvxLmUP5OpxNKNgx8uOzG";

@@ -40,10 +40,9 @@ export default class HttpClient {
 			options.body = JSON.stringify(body);
 
 		return new Promise(resolve => {
-			request[method.toLowerCase()](pathIsFull ? path : this.apiRoot + path, options, (err, response) => {
+			request[method.toLowerCase()](pathIsFull ? path : this.apiRoot + path, options, (err, response, body) => {
 				try {
 					let responseBody = {};
-
 
 					try {
 						responseBody = JSON.parse(response.body);
@@ -57,7 +56,6 @@ export default class HttpClient {
 						throw responseBody;
 
 					resolve(responseBody);
-
 				} catch (err) {
 					throw err;
 				}

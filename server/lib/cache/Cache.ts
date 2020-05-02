@@ -11,6 +11,11 @@ export default class Cache {
 		return this.collection.updateOne({ uri }, { ...item, uri }, { upsert: true });
 	}
 
+	async putMany(items: any[]) {
+		if (!!items && items.length > 0)
+			return await this.collection.insertMany(items);
+	}
+
 	async get(uri: string) {
 		if (this.inMemoryCache[uri])
 			return this.inMemoryCache[uri];

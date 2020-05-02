@@ -1,9 +1,11 @@
 import { PLAYLIST, QUEUE, PLAYLIST_REDIRECT } from "../constants/routes";
+import { STARRED_PLAYLIST_ID } from "../constants/api-constants";
 import { inject, observer } from "mobx-react";
 import { Link } from "react-router-dom";
 import React from "react";
 import PlaylistGroup from "./sidebar/PlaylistGroup";
 import LocalStorageCache from "../cache/LocalStorageCache";
+
 
 /** @typedef {import("../stores/AuthStore").default} AuthStore */
 /** @typedef {import("../stores/PlaylistStore").default} PlaylistStore */
@@ -29,8 +31,10 @@ class Sidebar extends React.Component {
 	async componentDidMount() {
 		await Promise.all([
 			this.playlistStore.loadPlaylistsForLoggedInUser(),
-			this.playlistStore.loadPlaylistGroups()
+			// this.playlistStore.loadPlaylistGroups()
 		]);
+
+		this.playlistStore.loadTracksInPlaylist(STARRED_PLAYLIST_ID);
 
 		this.forceUpdate();
 
@@ -81,7 +85,11 @@ class Sidebar extends React.Component {
 					<li id="artists" className="sidebar-playlist-item">Artists</li>
 					<li id="local-files" className="sidebar-playlist-item">Local files</li>
 					<li id="podcasts" className="sidebar-playlist-item">Podcasts</li>
-					<li id="starred" className="sidebar-playlist-item">Starred</li>
+					<li id="starred" className="sidebar-playlist-item">
+						<Link to={PLAYLIST_REDIRECT.replace(":playlistId", STARRED_PLAYLIST_ID)}						>
+							Starred
+						</Link>
+					</li>
 				</ul>
 
 				<h2>Playlists</h2>
@@ -127,9 +135,7 @@ class Sidebar extends React.Component {
 									track-droppable-playlist="true"
 									playlist-uri={playlist.uri}
 								>
-									<Link
-										to={PLAYLIST_REDIRECT.replace(":playlistId", playlist.uri)}
-									>
+									<Link to={PLAYLIST_REDIRECT.replace(":playlistId", playlist.uri)}>
 										{playlist.name} {displayName !== playlist.owner.display_name && <span className="playlist-owner">by {playlist.owner.display_name}</span>}
 									</Link>
 								</li>

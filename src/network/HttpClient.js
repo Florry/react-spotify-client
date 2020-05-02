@@ -1,4 +1,5 @@
 /** @typedef {import("../stores/AuthStore").default} AuthStore */
+import { API_LOGIN_URI } from "../constants/api-constants";
 
 // TODO: add query!
 
@@ -76,11 +77,19 @@ class HttpClient {
 				responseBody = await response.json();
 			} catch (err) { }
 
-			if ((response.status === 401 && responseBody && responseBody.error && responseBody.error.message === "The access token expired") ||
-				(responseBody.error && responseBody.error.status === 401 && responseBody && responseBody.error && responseBody.error.message === "The access token expired")) {
-				localStorage.removeItem("accessToken");
-				window.location.href = "";
-			}
+			// if (!!responseBody) {
+			// 	if ((response.status === 401 && responseBody && responseBody.error && responseBody.error.message === "The access token expired") ||
+			// 		(responseBody.error && responseBody.error.status === 401 && responseBody && responseBody.error && responseBody.error.message === "The access token expired")) {
+			// 		localStorage.removeItem("accessToken");
+			// 		window.location.href = "";
+			// 	}
+			// }
+
+			// if (response.status === 401) {
+			// 	localStorage.removeItem("accessToken");
+			// 	window.location.href = API_LOGIN_URI;
+			// 	return;
+			// }
 
 			if (response.status >= 400)
 				throw responseBody;

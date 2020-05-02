@@ -2,6 +2,7 @@ import PlaylistCache from "../cache/PlaylistCache";
 import SpotifyApiClient from "../network/SpotifyApiClient";
 import { Response } from "express";
 import { ServerRequest } from "../interfaces/ServerRequest";
+import { API_LOGIN_URI } from "../constants";
 
 export default class GetPlaylistHandler {
 
@@ -14,10 +15,17 @@ export default class GetPlaylistHandler {
 		try {
 			let playlist = await this.playlistCache.get(playlistId);
 
+			console.log("\n");
+			console.log(require("util").inspect(!playlist, null, null, true));
+			console.log("\n");
+
 			if (!playlist)
 				playlist = await this.spotifyApiClient.getPlaylist(accessToken, playlistId);
 
-			response.json(playlist);
+			if (!playlist)
+				response.json({});
+			else
+				response.json(playlist);
 		} catch (err) {
 			console.error(err);
 		}

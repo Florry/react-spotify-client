@@ -69,7 +69,7 @@ export default class PlayerStore {
 			Spotify = window.Spotify;
 			this._playerInstance = new Spotify.Player({
 				name: "react spotify client",
-				getOAuthToken: (cb) => cb(this.rootStore.stores.authStore._accessToken)
+				getOAuthToken: async (cb) => cb(await rootStore.stores.authStore.getAccessToken())
 			});
 
 			this._setupStateListeners();
@@ -129,7 +129,7 @@ export default class PlayerStore {
 	@action
 	async playTrack(trackUri) {
 		const { _options: { id } } = this._playerInstance;
-		const accessToken = this.rootStore.stores.authStore._accessToken;
+		const accessToken = await this.rootStore.stores.authStore.getAccessToken();
 
 		try {
 			await APIClient.put(accessToken, `${PATH_PLAY_TRACK}?device_id=${id}`, { uris: [trackUri] });
@@ -217,6 +217,11 @@ export default class PlayerStore {
 	@action
 	getVolume(volume) {
 		return this._playerInstance.getVolume();
+	}
+
+	async _getAccessToken() {
+		// TODO:
+
 	}
 
 }

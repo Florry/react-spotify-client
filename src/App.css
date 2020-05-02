@@ -453,6 +453,8 @@ button:focus {
 .sidebar-playlist-item#starred:before {
 	content: "\f005";
 	color: #d8ba58;
+	font-weight: 900;
+	font-family: "Font Awesome 5 Free";
 }
 
 .sidebar-playlist-item#home:before {

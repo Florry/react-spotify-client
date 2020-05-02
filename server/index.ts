@@ -3,16 +3,17 @@ import * as express from "express";
 import * as bodyParser from "body-parser";
 import * as mongodb from "mongodb";
 import * as WebSocket from "ws";
-import PlaylistCache from "./cache/PlaylistCache";
-import PlaylistsCache from "./cache/PlaylistsCache";
-import AuthCache from "./cache/AuthCache";
-import SpotifyApiClient from "./network/SpotifyApiClient";
-import GetPlaylistHandler from "./handlers/GetPlaylistHandler";
-import GetPlaylistForLoggedInUserHandler from "./handlers/GetPlaylistForLoggedInUserHandler";
-import getToken from "./middleware/getToken";
-import { ServerRequest } from "./interfaces/ServerRequest";
-import WebsocketResponse from "./network/WebsockeResponse";
-import SaveAccessToken from "./handlers/SaveAccessToken";
+import PlaylistCache from "./lib/cache/PlaylistCache";
+import PlaylistsCache from "./lib/cache/PlaylistsCache";
+import AuthCache from "./lib/cache/AuthCache";
+import SpotifyApiClient from "./lib/network/SpotifyApiClient";
+import GetPlaylistHandler from "./lib/handlers/GetPlaylistHandler";
+import GetPlaylistForLoggedInUserHandler from "./lib/handlers/GetPlaylistForLoggedInUserHandler";
+import getToken from "./lib/middleware/getToken";
+import { ServerRequest } from "./lib/interfaces/ServerRequest";
+import WebsocketResponse from "./lib/network/WebsockeResponse";
+import SaveAccessToken from "./lib/handlers/SaveAccessToken";
+import GetAccessToken from "./lib/handlers/GetAccessToken";
 
 const cors = require("cors");
 const compression = require("compression");
@@ -25,7 +26,7 @@ app.use(compression());
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(getToken);
+
 
 app.get("/", (request, response) => response.json(`OK since ${startDate.toJSON()}`));
 
@@ -48,14 +49,19 @@ async function registerEndpoints() {
 	const getPlaylist = new GetPlaylistHandler(playlistCache, spotifyApiClient);
 	const getPlaylistForLoggedInUserHandler = new GetPlaylistForLoggedInUserHandler(playlistsCache, spotifyApiClient);
 	const saveAccessToken = new SaveAccessToken(authCache, spotifyApiClient);
+	const getAccessToken = new GetAccessToken(spotifyApiClient);
+
+	app.use(getToken(spotifyApiClient));
 
 	app.get("/playlist", (request, response) => getPlaylistForLoggedInUserHandler.handle(request as ServerRequest, response));
 	app.get("/playlist/:playlistId", (request, response) => getPlaylist.handle(request as ServerRequest, response));
 	app.post("/access-token", (request, response) => saveAccessToken.handle(request as ServerRequest, response));
+	app.get("/access-token", (request, response) => getAccessToken.handle(request as ServerRequest, response));
 
 	ws.get("/playlist", (request, response) => getPlaylistForLoggedInUserHandler.handle(request as ServerRequest, response));
 	ws.get("/playlist/:playlistId", (request, response) => getPlaylist.handle(request as ServerRequest, response));
 	ws.post("/access-token", (request, response) => saveAccessToken.handle(request as ServerRequest, response));
+	ws.get("/access-token", (request, response) => getAccessToken.handle(request as ServerRequest, response));
 }
 
 // TODO: Move to its own file
